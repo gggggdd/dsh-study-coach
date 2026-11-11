@@ -1,0 +1,56 @@
+{
+  "name": "@local/dsh-study-coach",
+  "version": "1.2.0",
+  "private": true,
+  "type": "module",
+  "description": "学习教练（雨课堂特化）：读取指定雨课堂课程与课件，一键 AI 总结知识点、单页批注对话，并生成学习计划与考点清单。",
+  "meta": {
+    "title": "学习教练 · 雨课堂",
+    "description": "读取雨课堂课程/课件/章节进度，一键 AI 总结知识点、单页放大批注对话，生成学习计划与考点清单，并沉淀为间隔重复卡片。"
+  },
+  "icon": "./icon.svg",
+  "scripts": {
+    "test": "node test/ai.test.mjs && node test/host.test.mjs && node test/host-ykt.test.mjs && node test/host-route.test.mjs && node test/host-ai.test.mjs && node test/host-ai-speed.test.mjs && node test/ykt.test.mjs && node test/client.smoke.mjs"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "study",
+    "flashcards",
+    "spaced-repetition",
+    "yuketang",
+    "雨课堂"
+  ],
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "ai.js",
+    "client.js",
+    "ykt.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "README.md",
+    "vendor/qrcode.js",
+    "vendor/qrcode.LICENSE"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-conversation"
+      ]
+    }
+  }
+}

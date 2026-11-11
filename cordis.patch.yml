@@ -1,0 +1,6 @@
+# 学习教练（Learning Coach）bundle 的 Loader row。
+# 这个 id 同时是设置命名空间（ns）：client.js 的 NS、Host 侧 ownEntryId() 都从这里取值。
+- insert:
+    - id: study-coach
+      name: '@local/dsh-study-coach'
+      config: {}
