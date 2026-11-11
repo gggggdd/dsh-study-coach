@@ -2,6 +2,7 @@
   "name": "@local/dsh-study-coach",
   "version": "1.2.0",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "description": "学习教练（雨课堂特化）：读取指定雨课堂课程与课件，一键 AI 总结知识点、单页批注对话，并生成学习计划与考点清单。",
   "meta": {
@@ -38,6 +39,7 @@
     "locale/*.json",
     "icon.svg",
     "README.md",
+    "LICENSE",
     "vendor/qrcode.js",
     "vendor/qrcode.LICENSE"
   ],

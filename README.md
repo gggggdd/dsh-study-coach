@@ -88,3 +88,7 @@ node test/client.smoke.mjs
 - **课程列表 HTTP 500**：常见原因是 Cookie 缺少 `csrftoken` / `university_id`（尤其是长江/荷塘区域）。请改用完整 Cookie 登录。
 - **课程/课件返回 401 或 50000**：sessionid 已过期，重新扫码或重新粘贴完整 Cookie。
 - **课件页图片打不开**：课件图片本身若在雨课堂 CDN 上过期/不可见，面板会给出图片 URL；可在浏览器中打开对应课程页面确认权限。
+
+## 许可证 / License
+
+[MIT](LICENSE)。内联的 qrcode-generator 保留其原 MIT 许可（见 `vendor/qrcode.LICENSE`）。
