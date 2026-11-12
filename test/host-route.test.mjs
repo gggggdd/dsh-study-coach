@@ -66,7 +66,8 @@ globalThis.fetch = async (url) => {
 }
 
 apply(ctx, config)
-assert.equal(routes.size, 19, 'nineteen exact bridge routes registered')
+assert.equal(routes.size, 23, 'twenty-three exact bridge routes registered')
+assert.ok(routes.has('/api/local/dsh-ykt-study/slide-image'), 'slide-image route registered')
 assert.ok(routes.has('/api/local/dsh-ykt-study/status'), 'status route registered')
 assert.ok(routes.has('/api/local/dsh-ykt-study/qr/poll'), 'qr/poll route registered')
 assert.ok(routes.has('/api/local/dsh-ykt-study/models'), 'models route registered')

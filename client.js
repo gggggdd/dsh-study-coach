@@ -2389,6 +2389,16 @@ var qrcode = function() {
       'ykt.modelSaveFailed': '模型保存失败：{detail}',
       'ykt.summary': 'AI 总结',
       'ykt.summaryStart': 'AI 总结本节',
+      'ykt.summaryStartPicked': 'AI 总结所选页（排除 {n} 页）',
+      'ykt.pickCount': '本课件参与总结：{picked} / {total} 页',
+      'ykt.pickOther': '其他课件另有 {n} 页未勾选',
+      'ykt.pickAll': '全选',
+      'ykt.pickNone': '全不选',
+      'ykt.pickInvert': '反选',
+      'ykt.pickHint': '取消勾选的页不会交给 AI 总结。',
+      'ykt.pickSlide': '第 {n} 页参与 AI 总结',
+      'ykt.pickExcluded': '不参与总结',
+      'ykt.pickEmpty': '请至少勾选一页课件再总结。',
       'ykt.summaryAgain': '重新总结',
       'ykt.summaryCancel': '取消总结',
       'ykt.summaryRunning': 'AI 正在阅读本节全部课件（{done}/{total} 页）…',
@@ -2400,7 +2410,7 @@ var qrcode = function() {
       'ykt.summaryDone': '已生成知识点总结',
       'ykt.summaryFailed': 'AI 总结失败：{detail}',
       'ykt.summaryEmpty': '还没有 AI 总结。点击后 AI 会阅读本节全部课件页面，整理知识点、考点和复习计划。',
-      'ykt.summaryHint': 'AI 会读取本课时所有课件页（不是只读当前页），并生成结构化知识点总结。',
+      'ykt.summaryHint': 'AI 会读取本课时勾选的课件页（默认全部勾选，可在下方缩略图上取消），并生成结构化知识点总结。',
       'ykt.summaryCached': '上次生成',
       'ykt.summaryCopy': '复制 Markdown',
       'ykt.summaryCopied': '总结已复制到剪贴板',
@@ -2474,11 +2484,14 @@ var qrcode = function() {
       'ykt.chatSend': '发送',
       'ykt.chatThinking': 'AI 正在思考…',
       'ykt.chatClear': '清空对话',
+      'ykt.chatStoreHint': '单页对话和看板对话只在本机保存文字（每节课最多 60 段、每段保留最近 30 条）；发给 AI 的图片用完即删。',
+      'ykt.chatStoreClear': '清空本节课保存的对话',
+      'ykt.chatStoreCleared': '已清空本节课保存的对话',
       'ykt.chatQuick1': '解释这一页',
       'ykt.chatQuick2': '这页的考点是什么？',
       'ykt.chatQuick3': '圈出的部分是什么意思？',
       'ykt.chatFailed': 'AI 回复失败：{detail}',
-      'ykt.chatAnnotation': '提问会带上你画的 {n} 处标注',
+      'ykt.chatAnnotation': '提问将聚焦你标注的 {n} 处：AI 先看圈画处的放大图再回答',
       'ykt.chatNoModel': '请先选择一个支持图片的模型',
       'ykt.deadline': '截止',
       'ykt.leafType.0': '视频',
@@ -2633,6 +2646,16 @@ var qrcode = function() {
       'ykt.modelSaveFailed': 'Could not save the model: {detail}',
       'ykt.summary': 'AI summary',
       'ykt.summaryStart': 'Summarize this lesson',
+      'ykt.summaryStartPicked': 'Summarize selected slides ({n} excluded)',
+      'ykt.pickCount': 'Included in summary: {picked} / {total} slides',
+      'ykt.pickOther': '{n} more slides unticked in other decks',
+      'ykt.pickAll': 'Select all',
+      'ykt.pickNone': 'Select none',
+      'ykt.pickInvert': 'Invert',
+      'ykt.pickHint': 'Unticked slides are not sent to the AI summary.',
+      'ykt.pickSlide': 'Include slide {n} in the AI summary',
+      'ykt.pickExcluded': 'Excluded',
+      'ykt.pickEmpty': 'Tick at least one slide before summarizing.',
       'ykt.summaryAgain': 'Regenerate summary',
       'ykt.summaryCancel': 'Cancel summary',
       'ykt.summaryRunning': 'AI is reading all courseware ({done}/{total} slides)…',
@@ -2644,7 +2667,7 @@ var qrcode = function() {
       'ykt.summaryDone': 'Knowledge-point summary generated',
       'ykt.summaryFailed': 'AI summary failed: {detail}',
       'ykt.summaryEmpty': 'No AI summary yet. One click makes AI read every slide of this lesson and produce knowledge points, exam points and a study plan.',
-      'ykt.summaryHint': 'AI reads every slide page in this lesson (not just the current one) and produces a structured knowledge-point summary.',
+      'ykt.summaryHint': 'AI reads every ticked slide in this lesson (all are ticked by default; untick thumbnails below to skip them) and produces a structured knowledge-point summary.',
       'ykt.summaryCached': 'Generated previously',
       'ykt.summaryCopy': 'Copy Markdown',
       'ykt.summaryCopied': 'Summary copied to clipboard',
@@ -2718,11 +2741,14 @@ var qrcode = function() {
       'ykt.chatSend': 'Send',
       'ykt.chatThinking': 'AI is thinking…',
       'ykt.chatClear': 'Clear chat',
+      'ykt.chatStoreHint': 'Slide and board chats are saved locally as text only (up to 60 threads per lesson, last 30 messages each); images sent to the AI are deleted right after use.',
+      'ykt.chatStoreClear': 'Clear saved chats for this lesson',
+      'ykt.chatStoreCleared': 'Saved chats for this lesson were cleared',
       'ykt.chatQuick1': 'Explain this page',
       'ykt.chatQuick2': 'What are the exam points here?',
       'ykt.chatQuick3': 'What does the circled part mean?',
       'ykt.chatFailed': 'AI reply failed: {detail}',
-      'ykt.chatAnnotation': 'Your {n} annotations will be included',
+      'ykt.chatAnnotation': 'Questions focus on your {n} marks: the AI reads a close-up of each marked area first',
       'ykt.chatNoModel': 'Choose a vision-capable model first',
       'ykt.deadline': 'Due',
       'ykt.leafType.0': 'Video',
@@ -4336,7 +4362,7 @@ var qrcode = function() {
                       h('span', { className: 'sc-ykt-kp-name' }, point.name),
                       point.page ? h('span', { className: 'sc-ykt-kp-page' }, t('ykt.pageN', { n: point.page })) : null
                     ),
-                    point.detail ? h('p', { className: 'sc-ykt-kp-detail' }, point.detail) : null
+                    point.detail ? h('p', { className: 'sc-ykt-kp-detail' }, renderInlineLines(point.detail, 'kp')) : null
                   )
                 })
               )
@@ -4510,10 +4536,33 @@ var qrcode = function() {
       const [menu, setMenu] = React.useState(null)
       const [chatNodeId, setChatNodeId] = React.useState('')
       const [chats, setChats] = React.useState({})
+      const savedBoardRef = React.useRef({})
       const [draft, setDraft] = React.useState('')
       const [sending, setSending] = React.useState('')
       const [chatError, setChatError] = React.useState('')
       const [copied, setCopied] = React.useState('')
+      React.useEffect(
+        function () {
+          const saved = props.savedChats && typeof props.savedChats === 'object' ? props.savedChats : {}
+          savedBoardRef.current = Object.assign({}, saved)
+          setChats(function (prev) { return Object.assign({}, saved, prev) })
+        },
+        [props.savedChats]
+      )
+      React.useEffect(
+        function () {
+          if (!props.chatResetEpoch) return
+          savedBoardRef.current = {}
+          setChats({})
+        },
+        [props.chatResetEpoch]
+      )
+      React.useEffect(
+        function () {
+          if (props.lessonId) persistChangedChats(props.lessonId, 'board', savedBoardRef.current, chats)
+        },
+        [chats]
+      )
       const inputRef = React.useRef(null)
       const listRef = React.useRef(null)
       const focusInput = React.useRef(false)
@@ -4662,7 +4711,7 @@ var qrcode = function() {
           ),
           isSelected
             ? h('div', { className: 'sc-kb-detail' },
-                node.detail ? h('p', null, node.detail) : null,
+                node.detail ? h('p', null, renderInlineLines(node.detail, 'kb')) : null,
                 h('div', { className: 'sc-kb-detail-meta' },
                   h('span', { className: 'sc-kb-imp', 'data-imp': node.importance || 'medium' }, t('ykt.importance.' + (node.importance === 'high' || node.importance === 'low' ? node.importance : 'medium'))),
                   pages.map(function (page) {
@@ -4724,11 +4773,18 @@ var qrcode = function() {
                   h('div', { className: 'sc-kb-chat-heading' },
                     h('strong', null, t('ykt.boardChatTitle', { label: chatNode.label })),
                     chatPath.length ? h('span', { className: 'sc-kb-chat-path' }, chatPath.concat([chatNode.label]).join(' › ')) : null),
-                  h('button', { type: 'button', className: 'sc-iconbtn', 'aria-label': t('ykt.boardChatClose'), title: t('ykt.boardChatClose'), onClick: function () { setChatNodeId(''); setChatError('') } }, '✕')),
+                  h('div', { className: 'sc-kb-chat-tools' },
+                    chatMessages.length
+                      ? h('button', { type: 'button', className: 'sc-linkbtn', onClick: function () {
+                          const id = chatNode.id
+                          setChats(function (prev) { const next = Object.assign({}, prev); next[id] = []; return next })
+                        } }, t('ykt.chatClear'))
+                      : null,
+                    h('button', { type: 'button', className: 'sc-iconbtn', 'aria-label': t('ykt.boardChatClose'), title: t('ykt.boardChatClose'), onClick: function () { setChatNodeId(''); setChatError('') } }, '✕'))),
                 h('div', { className: 'sc-ykt-chat-list sc-kb-chat-list', ref: listRef },
                   chatMessages.length
                     ? chatMessages.map(function (message, index) {
-                        return h('div', { key: index, className: 'sc-ykt-msg', 'data-role': message.role }, h('div', { className: 'sc-ykt-msg-bubble' }, message.text))
+                        return h('div', { key: index, className: 'sc-ykt-msg', 'data-role': message.role }, chatBubble(message))
                       })
                     : h('p', { className: 'sc-ykt-chat-empty' }, t('ykt.boardChatEmpty')),
                   sending === chatNode.id ? h('div', { className: 'sc-ykt-chat-thinking' }, t('ykt.chatThinking')) : null),
@@ -4826,6 +4882,638 @@ var qrcode = function() {
       } catch (error) {
         return ''
       }
+    }
+
+    // ---- Annotation focus: crop what the student circled -----------------
+    // The model used to receive the whole slide plus a separate transparent
+    // stroke layer, so it skimmed the page instead of the marked spot. We now
+    // composite the strokes onto the page and cut a close-up of every marked
+    // region; those crops are sent first and carry the question.
+    const slideDataUrlCache = new Map()
+
+    function fetchSlideDataUrl(lessonId, presentationId, slideIndex) {
+      const cacheKey = presentationId + ':' + slideIndex
+      if (slideDataUrlCache.has(cacheKey)) return slideDataUrlCache.get(cacheKey)
+      const pending = yktFetch('slide-image', {
+        method: 'POST',
+        body: { lessonId: lessonId, presentationId: presentationId, slideIndex: slideIndex },
+      }).then(function (data) {
+        if (!data || !data.dataUrl) throw new Error('slide-image empty')
+        return data.dataUrl
+      })
+      pending.catch(function () { slideDataUrlCache.delete(cacheKey) })
+      slideDataUrlCache.set(cacheKey, pending)
+      if (slideDataUrlCache.size > 12) slideDataUrlCache.delete(slideDataUrlCache.keys().next().value)
+      return pending
+    }
+
+    function loadImageElement(src) {
+      return new Promise(function (resolve, reject) {
+        const image = new Image()
+        image.onload = function () { resolve(image) }
+        image.onerror = function () { reject(new Error('image decode failed')) }
+        image.src = src
+      })
+    }
+
+    function strokeBounds(stroke) {
+      const points = stroke && Array.isArray(stroke.points) ? stroke.points : []
+      if (!points.length) return null
+      let x0 = 1
+      let y0 = 1
+      let x1 = 0
+      let y1 = 0
+      points.forEach(function (point) {
+        const x = clamp01(point[0])
+        const y = clamp01(point[1])
+        if (x < x0) x0 = x
+        if (x > x1) x1 = x
+        if (y < y0) y0 = y
+        if (y > y1) y1 = y
+      })
+      // Highlighter strokes are thick bands; give them vertical room.
+      const pad = stroke.tool === 'highlight' ? 0.02 : 0.008
+      return { x0: x0 - pad, y0: y0 - pad, x1: x1 + pad, y1: y1 + pad }
+    }
+
+    /** Group strokes into at most three marked regions (normalised 0–1 boxes). */
+    function annotationRegions(strokes) {
+      const near = 0.05
+      let boxes = (Array.isArray(strokes) ? strokes : []).map(strokeBounds).filter(Boolean)
+      let merged = true
+      while (merged && boxes.length > 1) {
+        merged = false
+        outer: for (let i = 0; i < boxes.length; i += 1) {
+          for (let j = i + 1; j < boxes.length; j += 1) {
+            const a = boxes[i]
+            const b = boxes[j]
+            if (a.x0 - near <= b.x1 && b.x0 - near <= a.x1 && a.y0 - near <= b.y1 && b.y0 - near <= a.y1) {
+              boxes[i] = { x0: Math.min(a.x0, b.x0), y0: Math.min(a.y0, b.y0), x1: Math.max(a.x1, b.x1), y1: Math.max(a.y1, b.y1) }
+              boxes.splice(j, 1)
+              merged = true
+              break outer
+            }
+          }
+        }
+      }
+      boxes.sort(function (a, b) { return (b.x1 - b.x0) * (b.y1 - b.y0) - (a.x1 - a.x0) * (a.y1 - a.y0) })
+      if (boxes.length > 3) {
+        // Too many separate marks: fold the rest into the third region.
+        const rest = boxes.slice(2)
+        boxes = boxes.slice(0, 2).concat([rest.reduce(function (acc, box) {
+          return { x0: Math.min(acc.x0, box.x0), y0: Math.min(acc.y0, box.y0), x1: Math.max(acc.x1, box.x1), y1: Math.max(acc.y1, box.y1) }
+        })])
+      }
+      return boxes
+        .map(function (box) {
+          // Context margin around the mark, and a minimum size so a tiny
+          // circle still shows the surrounding line of text or formula.
+          let x0 = box.x0 - 0.06
+          let x1 = box.x1 + 0.06
+          let y0 = box.y0 - 0.05
+          let y1 = box.y1 + 0.05
+          const minW = 0.3
+          const minH = 0.2
+          if (x1 - x0 < minW) { const cx = (x0 + x1) / 2; x0 = cx - minW / 2; x1 = cx + minW / 2 }
+          if (y1 - y0 < minH) { const cy = (y0 + y1) / 2; y0 = cy - minH / 2; y1 = cy + minH / 2 }
+          if (x0 < 0) { x1 -= x0; x0 = 0 }
+          if (y0 < 0) { y1 -= y0; y0 = 0 }
+          if (x1 > 1) { x0 -= x1 - 1; x1 = 1 }
+          if (y1 > 1) { y0 -= y1 - 1; y1 = 1 }
+          return { x0: Math.max(0, x0), y0: Math.max(0, y0), x1: Math.min(1, x1), y1: Math.min(1, y1) }
+        })
+        .sort(function (a, b) { return a.y0 - b.y0 || a.x0 - b.x0 })
+    }
+
+    /**
+     * Resolve to { marked, focus: [{ image, box }] } — the full page with the
+     * strokes burnt in, and a close-up crop of each marked region.
+     */
+    function buildAnnotationImages(strokes, slideDataUrl) {
+      return loadImageElement(slideDataUrl).then(function (image) {
+        const naturalW = image.naturalWidth || image.width
+        const naturalH = image.naturalHeight || image.height
+        if (!naturalW || !naturalH) throw new Error('empty slide image')
+        const base = Math.min(1, 2400 / Math.max(naturalW, naturalH))
+        const page = document.createElement('canvas')
+        page.width = Math.max(1, Math.round(naturalW * base))
+        page.height = Math.max(1, Math.round(naturalH * base))
+        const pctx = page.getContext('2d')
+        if (!pctx) throw new Error('canvas unavailable')
+        pctx.fillStyle = '#ffffff'
+        pctx.fillRect(0, 0, page.width, page.height)
+        pctx.drawImage(image, 0, 0, page.width, page.height)
+        strokes.forEach(function (stroke) { drawAnnotationStroke(pctx, stroke, page.width, page.height) })
+
+        const markedScale = Math.min(1, 1600 / page.width)
+        const marked = document.createElement('canvas')
+        marked.width = Math.max(1, Math.round(page.width * markedScale))
+        marked.height = Math.max(1, Math.round(page.height * markedScale))
+        marked.getContext('2d').drawImage(page, 0, 0, marked.width, marked.height)
+
+        const focus = annotationRegions(strokes).map(function (box) {
+          const sx = Math.round(box.x0 * page.width)
+          const sy = Math.round(box.y0 * page.height)
+          const sw = Math.max(1, Math.round((box.x1 - box.x0) * page.width))
+          const sh = Math.max(1, Math.round((box.y1 - box.y0) * page.height))
+          // Upscale small regions (up to 2.5x) so fine print stays legible.
+          const scale = Math.min(2.5, 1280 / Math.max(sw, sh))
+          const crop = document.createElement('canvas')
+          crop.width = Math.max(1, Math.round(sw * scale))
+          crop.height = Math.max(1, Math.round(sh * scale))
+          const cctx = crop.getContext('2d')
+          cctx.imageSmoothingQuality = 'high'
+          cctx.drawImage(page, sx, sy, sw, sh, 0, 0, crop.width, crop.height)
+          return { image: crop.toDataURL('image/jpeg', 0.92), box: box }
+        })
+        return { marked: marked.toDataURL('image/jpeg', 0.88), focus: focus }
+      })
+    }
+
+    // ---- Rich answers: Markdown + LaTeX rendered as native MathML ----------
+    // AI answers arrive as Markdown with TeX math (\( \), \[ \], $ $, $$ $$).
+    // They used to be shown verbatim; this small renderer turns the common
+    // Markdown blocks into elements and converts TeX to MathML, which the
+    // desktop shell's Chromium draws natively — no fonts or CDN needed.
+    // Anything the converter does not understand degrades to readable text.
+    const TEX_GREEK = {
+      alpha: 'α', beta: 'β', gamma: 'γ', delta: 'δ', epsilon: 'ϵ', varepsilon: 'ε', zeta: 'ζ', eta: 'η',
+      theta: 'θ', vartheta: 'ϑ', iota: 'ι', kappa: 'κ', lambda: 'λ', mu: 'μ', nu: 'ν', xi: 'ξ', omicron: 'ο',
+      pi: 'π', varpi: 'ϖ', rho: 'ρ', varrho: 'ϱ', sigma: 'σ', varsigma: 'ς', tau: 'τ', upsilon: 'υ',
+      phi: 'ϕ', varphi: 'φ', chi: 'χ', psi: 'ψ', omega: 'ω',
+      Gamma: 'Γ', Delta: 'Δ', Theta: 'Θ', Lambda: 'Λ', Xi: 'Ξ', Pi: 'Π', Sigma: 'Σ', Upsilon: 'Υ',
+      Phi: 'Φ', Psi: 'Ψ', Omega: 'Ω',
+    }
+    const TEX_IDENT = { infty: '∞', partial: '∂', nabla: '∇', emptyset: '∅', varnothing: '∅', hbar: 'ℏ', ell: 'ℓ', aleph: 'ℵ', Re: 'ℜ', Im: 'ℑ', imath: 'ı', jmath: 'ȷ' }
+    const TEX_OPS = {
+      times: '×', cdot: '⋅', div: '÷', pm: '±', mp: '∓', ast: '∗', star: '⋆', circ: '∘', bullet: '∙',
+      leq: '≤', le: '≤', geq: '≥', ge: '≥', neq: '≠', ne: '≠', approx: '≈', equiv: '≡', sim: '∼', simeq: '≃',
+      cong: '≅', propto: '∝', ll: '≪', gg: '≫', in: '∈', notin: '∉', ni: '∋', subset: '⊂', subseteq: '⊆',
+      supset: '⊃', supseteq: '⊇', cup: '∪', cap: '∩', setminus: '∖', forall: '∀', exists: '∃', neg: '¬',
+      lnot: '¬', land: '∧', wedge: '∧', lor: '∨', vee: '∨', to: '→', rightarrow: '→', leftarrow: '←',
+      gets: '←', Rightarrow: '⇒', Leftarrow: '⇐', Leftrightarrow: '⇔', leftrightarrow: '↔', iff: '⟺',
+      implies: '⟹', mapsto: '↦', longrightarrow: '⟶', uparrow: '↑', downarrow: '↓',
+      ldots: '…', cdots: '⋯', vdots: '⋮', ddots: '⋱', dots: '…', mid: '∣', parallel: '∥', perp: '⊥',
+      angle: '∠', langle: '⟨', rangle: '⟩', lfloor: '⌊', rfloor: '⌋', lceil: '⌈', rceil: '⌉',
+      lvert: '|', rvert: '|', vert: '|', lVert: '‖', rVert: '‖', Vert: '‖', prime: '′', triangle: '△',
+      odot: '⊙', oplus: '⊕', otimes: '⊗', top: '⊤', bot: '⊥', colon: ':', backslash: '∖',
+    }
+    const TEX_BIG_OPS = { sum: '∑', prod: '∏', coprod: '∐', int: '∫', iint: '∬', iiint: '∭', oint: '∮', bigcup: '⋃', bigcap: '⋂', bigoplus: '⨁', bigotimes: '⨂' }
+    const TEX_FUNCS = ['sin', 'cos', 'tan', 'cot', 'sec', 'csc', 'arcsin', 'arccos', 'arctan', 'sinh', 'cosh', 'tanh', 'log', 'ln', 'lg', 'exp', 'det', 'dim', 'ker', 'arg', 'deg', 'gcd', 'Pr', 'hom']
+    const TEX_LIMIT_FUNCS = ['lim', 'max', 'min', 'sup', 'inf', 'limsup', 'liminf', 'argmax', 'argmin']
+    const TEX_SPACES = { ',': '0.167em', ':': '0.222em', '>': '0.222em', ';': '0.278em', ' ': '0.25em', quad: '1em', qquad: '2em', enspace: '0.5em', thinspace: '0.167em' }
+    const TEX_ACCENTS = { hat: '^', widehat: '^', bar: '¯', overline: '¯', vec: '→', overrightarrow: '→', tilde: '~', widetilde: '~', dot: '˙', ddot: '¨', check: 'ˇ', breve: '˘' }
+    const TEX_BB = { R: 'ℝ', N: 'ℕ', Z: 'ℤ', Q: 'ℚ', C: 'ℂ', P: 'ℙ', H: 'ℍ', E: '𝔼', 1: '𝟙' }
+
+    function escapeXml(value) {
+      return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+    }
+
+    function texTokens(src) {
+      const out = []
+      let i = 0
+      while (i < src.length && out.length < 6000) {
+        const c = src[i]
+        if (c === '\\') {
+          const word = /^\\([a-zA-Z]+)\*?/.exec(src.slice(i, i + 40))
+          if (word) { out.push({ t: 'cmd', v: word[1] }); i += word[0].length; continue }
+          out.push({ t: 'cmd', v: src[i + 1] || '' })
+          i += 2
+          continue
+        }
+        if (/\s/.test(c)) { out.push({ t: 'sp', v: ' ' }); i += 1; continue }
+        if (/[0-9]/.test(c)) {
+          const num = /^[0-9]+(?:\.[0-9]+)?/.exec(src.slice(i))[0]
+          out.push({ t: 'num', v: num })
+          i += num.length
+          continue
+        }
+        out.push({ t: 'ch', v: c })
+        i += 1
+      }
+      return out
+    }
+
+    /** Convert one TeX expression to a MathML string. Throws on hard failures. */
+    function texToMathML(src, display) {
+      const toks = texTokens(String(src || ''))
+      let pos = 0
+      let lastBigOp = false
+      const skip = function () { while (pos < toks.length && toks[pos].t === 'sp') pos += 1 }
+      const peek = function () { skip(); return toks[pos] }
+      const next = function () { skip(); return toks[pos++] }
+      const isCh = function (tok, v) { return !!tok && tok.t === 'ch' && tok.v === v }
+      const isCmd = function (tok, v) { return !!tok && tok.t === 'cmd' && tok.v === v }
+      const mrow = function (items) { return '<mrow>' + items.join('') + '</mrow>' }
+      const tokText = function (tok) {
+        if (tok.t === 'cmd') return /^[a-zA-Z]+$/.test(tok.v) ? '\\' + tok.v : (tok.v === ',' || tok.v === ' ' ? ' ' : tok.v)
+        return tok.v
+      }
+      const rawArg = function () {
+        skip()
+        const tok = toks[pos]
+        if (!tok) return ''
+        if (!isCh(tok, '{')) { pos += 1; return tokText(tok) }
+        pos += 1
+        let depth = 1
+        let out = ''
+        while (pos < toks.length) {
+          const t = toks[pos++]
+          if (isCh(t, '{')) depth += 1
+          if (isCh(t, '}')) {
+            depth -= 1
+            if (!depth) break
+          }
+          out += tokText(t)
+        }
+        return out
+      }
+      const parseRow = function (stop) {
+        const items = []
+        let guard = 0
+        while (guard++ < 6000) {
+          const tok = peek()
+          if (!tok || (stop && stop(tok))) break
+          items.push(parseScripted())
+        }
+        return items
+      }
+      const groupArg = function () {
+        const tok = peek()
+        if (!tok) return '<mrow></mrow>'
+        if (isCh(tok, '{')) {
+          next()
+          const items = parseRow(function (t) { return isCh(t, '}') })
+          if (peek()) next()
+          return mrow(items)
+        }
+        return mrow([parseAtom()])
+      }
+      const delimiter = function (tok) {
+        if (!tok) return ''
+        if (tok.t === 'ch') return tok.v === '.' ? '' : tok.v
+        if (tok.v === '{' || tok.v === '}') return tok.v
+        if (tok.v === '|') return '‖'
+        return TEX_OPS[tok.v] || ''
+      }
+      const environment = function (name) {
+        if (name === 'array') rawArg()
+        const rows = [[]]
+        let cell = []
+        let guard = 0
+        while (guard++ < 6000) {
+          const tok = peek()
+          if (!tok) break
+          if (isCmd(tok, 'end')) { next(); rawArg(); break }
+          if (isCmd(tok, '\\')) { next(); rows[rows.length - 1].push(cell); cell = []; rows.push([]); continue }
+          if (isCh(tok, '&')) { next(); rows[rows.length - 1].push(cell); cell = []; continue }
+          cell.push(parseScripted())
+        }
+        rows[rows.length - 1].push(cell)
+        const filled = rows.filter(function (row) { return row.some(function (c) { return c.length }) })
+        const aligned = name === 'aligned' || name === 'align' || name === 'cases' || name === 'split' || name === 'gathered'
+        const table = '<mtable' + (aligned ? ' columnalign="' + (name === 'cases' ? 'left left' : 'right left') + '"' : '') + '>' +
+          filled.map(function (row) {
+            return '<mtr>' + row.map(function (c) { return '<mtd>' + mrow(c) + '</mtd>' }).join('') + '</mtr>'
+          }).join('') + '</mtable>'
+        const fences = { pmatrix: ['(', ')'], bmatrix: ['[', ']'], Bmatrix: ['{', '}'], vmatrix: ['|', '|'], Vmatrix: ['‖', '‖'], cases: ['{', ''] }[name]
+        if (!fences) return table
+        return '<mrow><mo stretchy="true">' + escapeXml(fences[0]) + '</mo>' + table + (fences[1] ? '<mo stretchy="true">' + escapeXml(fences[1]) + '</mo>' : '') + '</mrow>'
+      }
+      const parseCommand = function (name) {
+        if (name === 'frac' || name === 'dfrac' || name === 'tfrac' || name === 'cfrac') return '<mfrac>' + groupArg() + groupArg() + '</mfrac>'
+        if (name === 'binom' || name === 'dbinom' || name === 'tbinom') return '<mrow><mo>(</mo><mfrac linethickness="0">' + groupArg() + groupArg() + '</mfrac><mo>)</mo></mrow>'
+        if (name === 'sqrt') {
+          if (isCh(peek(), '[')) {
+            next()
+            const index = parseRow(function (t) { return isCh(t, ']') })
+            if (peek()) next()
+            const base = groupArg()
+            return '<mroot>' + base + mrow(index) + '</mroot>'
+          }
+          return '<msqrt>' + groupArg() + '</msqrt>'
+        }
+        if (name === 'left') {
+          const open = delimiter(next())
+          const inner = parseRow(function (t) { return isCmd(t, 'right') })
+          let close = ''
+          if (isCmd(peek(), 'right')) { next(); close = delimiter(next()) }
+          return '<mrow>' + (open ? '<mo stretchy="true">' + escapeXml(open) + '</mo>' : '') + inner.join('') + (close ? '<mo stretchy="true">' + escapeXml(close) + '</mo>' : '') + '</mrow>'
+        }
+        if (name === 'right' || name === 'middle') { const d = delimiter(next()); return d ? '<mo stretchy="true">' + escapeXml(d) + '</mo>' : '' }
+        if (/^(big|Big|bigg|Bigg)(l|r|m)?$/.test(name)) { const d = delimiter(next()); return d ? '<mo>' + escapeXml(d) + '</mo>' : '' }
+        if (name === 'text' || name === 'mbox' || name === 'textrm' || name === 'textup' || name === 'textnormal') return '<mtext>' + escapeXml(rawArg()) + '</mtext>'
+        if (name === 'textbf') return '<mtext style="font-weight:bold">' + escapeXml(rawArg()) + '</mtext>'
+        if (name === 'textit' || name === 'emph') return '<mtext style="font-style:italic">' + escapeXml(rawArg()) + '</mtext>'
+        if (name === 'mathrm' || name === 'operatorname' || name === 'mathup' || name === 'rm') {
+          const value = rawArg().replace(/\\,|\\ /g, ' ').trim()
+          return '<mi mathvariant="normal">' + escapeXml(value) + '</mi>'
+        }
+        if (name === 'mathbf' || name === 'boldsymbol' || name === 'bm' || name === 'bf') return '<mrow style="font-weight:bold">' + groupArg() + '</mrow>'
+        if (name === 'mathit') return groupArg()
+        if (name === 'mathbb' || name === 'Bbb') {
+          const value = rawArg()
+          return '<mi mathvariant="normal">' + escapeXml(value.split('').map(function (ch) { return TEX_BB[ch] || ch }).join('')) + '</mi>'
+        }
+        if (name === 'mathcal' || name === 'mathscr' || name === 'mathfrak' || name === 'mathsf' || name === 'mathtt') return '<mi>' + escapeXml(rawArg()) + '</mi>'
+        if (TEX_ACCENTS[name]) return '<mover accent="true">' + groupArg() + '<mo stretchy="' + (/^(widehat|widetilde|overline|overrightarrow)$/.test(name) ? 'true' : 'false') + '">' + TEX_ACCENTS[name] + '</mo></mover>'
+        if (name === 'underline') return '<munder accentunder="true">' + groupArg() + '<mo stretchy="true">_</mo></munder>'
+        if (name === 'underbrace') return '<munder>' + groupArg() + '<mo stretchy="true">⏟</mo></munder>'
+        if (name === 'overbrace') return '<mover>' + groupArg() + '<mo stretchy="true">⏞</mo></mover>'
+        if (name === 'begin') return environment(rawArg())
+        if (name === 'end') { rawArg(); return '' }
+        if (TEX_SPACES[name]) return '<mspace width="' + TEX_SPACES[name] + '"></mspace>'
+        if (name === '!' || name === '\\' || name === 'limits' || name === 'nolimits' || name === 'displaystyle' || name === 'textstyle' || name === 'scriptstyle' || name === 'not' || name === 'nonumber' || name === 'notag') return ''
+        if (name === '{' || name === '}' || name === '|' || name === '%' || name === '$' || name === '#' || name === '&' || name === '_') return '<mo>' + escapeXml(name === '|' ? '‖' : name) + '</mo>'
+        if (TEX_GREEK[name]) return '<mi' + (/^[A-Z]/.test(name) ? ' mathvariant="normal"' : '') + '>' + TEX_GREEK[name] + '</mi>'
+        if (TEX_IDENT[name]) return '<mi mathvariant="normal">' + TEX_IDENT[name] + '</mi>'
+        if (TEX_OPS[name]) return '<mo>' + escapeXml(TEX_OPS[name]) + '</mo>'
+        if (TEX_BIG_OPS[name]) { lastBigOp = true; return '<mo largeop="true">' + TEX_BIG_OPS[name] + '</mo>' }
+        if (TEX_LIMIT_FUNCS.indexOf(name) >= 0) { lastBigOp = true; return '<mi mathvariant="normal">' + (name === 'argmax' ? 'arg max' : name === 'argmin' ? 'arg min' : name) + '</mi>' }
+        if (TEX_FUNCS.indexOf(name) >= 0) return '<mi mathvariant="normal">' + name + '</mi><mo>&#x2061;</mo>'
+        return '<mtext>' + escapeXml('\\' + name) + '</mtext>'
+      }
+      const parseAtom = function () {
+        const tok = next()
+        if (!tok) return ''
+        if (tok.t === 'num') return '<mn>' + escapeXml(tok.v) + '</mn>'
+        if (tok.t === 'ch') {
+          const v = tok.v
+          if (v === '{') {
+            const items = parseRow(function (t) { return isCh(t, '}') })
+            if (peek()) next()
+            return mrow(items)
+          }
+          if (v === '}' || v === '&') return ''
+          if (v === '~') return '<mspace width="0.25em"></mspace>'
+          if (v === "'") return '<mo>′</mo>'
+          if (/[a-zA-Z]/.test(v)) return '<mi>' + v + '</mi>'
+          if (/[一-鿿]/.test(v)) return '<mtext>' + v + '</mtext>'
+          return '<mo>' + escapeXml(v) + '</mo>'
+        }
+        return parseCommand(tok.v)
+      }
+      const parseScripted = function () {
+        lastBigOp = false
+        let base = parseAtom()
+        const big = lastBigOp
+        if (!base) base = '<mrow></mrow>'
+        let sub = null
+        let sup = null
+        let guard = 0
+        while (guard++ < 20) {
+          const tok = peek()
+          if (isCh(tok, '_') || isCh(tok, '^')) {
+            next()
+            const arg = groupArg()
+            if (tok.v === '_') sub = arg
+            else sup = arg
+            continue
+          }
+          if (isCh(tok, "'")) { next(); sup = '<mo>′</mo>'; continue }
+          break
+        }
+        // A trailing function-application mark must stay outside the script base.
+        const applyMark = '<mo>&#x2061;</mo>'
+        let tail = ''
+        if ((sub || sup) && base.length > applyMark.length && base.slice(-applyMark.length) === applyMark) {
+          tail = applyMark
+          base = '<mrow>' + base.slice(0, -applyMark.length) + '</mrow>'
+        }
+        const under = big && display
+        if (sub && sup) return (under ? '<munderover>' : '<msubsup>') + base + sub + sup + (under ? '</munderover>' : '</msubsup>') + tail
+        if (sub) return (under ? '<munder>' : '<msub>') + base + sub + (under ? '</munder>' : '</msub>') + tail
+        if (sup) return (under ? '<mover>' : '<msup>') + base + sup + (under ? '</mover>' : '</msup>') + tail
+        return base
+      }
+      const body = parseRow(null)
+      return '<math' + (display ? ' display="block"' : '') + '>' + mrow(body) + '</math>'
+    }
+
+    function richMath(tex, display, key) {
+      let markup = ''
+      try {
+        markup = texToMathML(tex, display)
+      } catch (error) {
+        markup = ''
+      }
+      if (!markup) return h('code', { key: key, className: 'sc-md-code' }, tex)
+      return h(display ? 'div' : 'span', {
+        key: key,
+        className: display ? 'sc-math sc-math-block' : 'sc-math',
+        'data-tex': tex,
+        dangerouslySetInnerHTML: { __html: markup },
+      })
+    }
+
+    const RICH_INLINE = /\\\(([\s\S]+?)\\\)|\$(?!\s)([^$\n]+?)(?<!\s)\$|`([^`\n]+)`|\*\*([\s\S]+?)\*\*|__([^_\n]+?)__|\*(?!\s)([^*\n]+?)\*/g
+
+    /** Inline Markdown: math, `code`, **bold**, *italic*. */
+    function renderInline(text, keyPrefix) {
+      const source = String(text || '')
+      const out = []
+      let last = 0
+      let index = 0
+      const prefix = keyPrefix || 'i'
+      RICH_INLINE.lastIndex = 0
+      const pattern = new RegExp(RICH_INLINE.source, 'g')
+      let match
+      while ((match = pattern.exec(source))) {
+        if (match.index > last) out.push(source.slice(last, match.index))
+        const key = prefix + '-' + index++
+        if (match[1] !== undefined) out.push(richMath(match[1].trim(), false, key))
+        else if (match[2] !== undefined) out.push(richMath(match[2].trim(), false, key))
+        else if (match[3] !== undefined) out.push(h('code', { key: key, className: 'sc-md-code' }, match[3]))
+        else if (match[4] !== undefined) out.push(h('strong', { key: key }, renderInline(match[4], key)))
+        else if (match[5] !== undefined) out.push(h('strong', { key: key }, renderInline(match[5], key)))
+        else if (match[6] !== undefined) out.push(h('em', { key: key }, renderInline(match[6], key)))
+        last = pattern.lastIndex
+      }
+      if (last < source.length) out.push(source.slice(last))
+      return out
+    }
+
+    function renderInlineLines(text, keyPrefix) {
+      const lines = String(text || '').split('\n')
+      const out = []
+      lines.forEach(function (line, index) {
+        if (index) out.push(h('br', { key: keyPrefix + '-br' + index }))
+        out.push.apply(out, renderInline(line, keyPrefix + '-l' + index))
+      })
+      return out
+    }
+
+    /** Block Markdown (headings, lists, quotes, tables, code, display math). */
+    function renderRich(text, keyPrefix) {
+      const prefix = keyPrefix || 'md'
+      const stash = []
+      const hold = function (block) { stash.push(block); return '\n\u0000B' + (stash.length - 1) + '\u0000\n' }
+      let source = String(text || '').replace(/\r\n?/g, '\n')
+      source = source.replace(/```[^\n`]*\n([\s\S]*?)```/g, function (_, code) { return hold({ kind: 'code', value: code.replace(/\n$/, '') }) })
+      source = source.replace(/\$\$([\s\S]+?)\$\$/g, function (_, tex) { return hold({ kind: 'math', value: tex.trim() }) })
+      source = source.replace(/\\\[([\s\S]+?)\\\]/g, function (_, tex) { return hold({ kind: 'math', value: tex.trim() }) })
+
+      const blocks = []
+      let paragraph = []
+      let quote = []
+      let listRoot = null
+      let stack = []
+      let table = []
+      let blockIndex = 0
+      const nextKey = function () { return prefix + '-b' + blockIndex++ }
+
+      const flushParagraph = function () {
+        if (!paragraph.length) return
+        const key = nextKey()
+        blocks.push(h('p', { key: key, className: 'sc-md-p' }, renderInlineLines(paragraph.join('\n'), key)))
+        paragraph = []
+      }
+      const flushQuote = function () {
+        if (!quote.length) return
+        const key = nextKey()
+        blocks.push(h('blockquote', { key: key, className: 'sc-md-quote' }, renderInlineLines(quote.join('\n'), key)))
+        quote = []
+      }
+      const renderList = function (list, key) {
+        return h(list.type, { key: key, className: 'sc-md-list', start: list.type === 'ol' && list.start > 1 ? list.start : undefined },
+          list.items.map(function (item, index) {
+            const itemKey = key + '-' + index
+            return h('li', { key: itemKey },
+              renderInlineLines(item.content, itemKey),
+              item.children.map(function (child, childIndex) { return renderList(child, itemKey + '-c' + childIndex) }))
+          }))
+      }
+      const flushList = function () {
+        if (!listRoot) return
+        blocks.push(renderList(listRoot, nextKey()))
+        listRoot = null
+        stack = []
+      }
+      const addItem = function (type, indent, content, start) {
+        while (stack.length && stack[stack.length - 1].indent > indent) stack.pop()
+        let top = stack[stack.length - 1]
+        if (top && top.indent === indent && top.type !== type) {
+          stack.pop()
+          top = stack[stack.length - 1]
+        }
+        if (!top && listRoot) flushList()
+        if (top && top.indent === indent) { top.items.push({ content: content, children: [] }); return }
+        const list = { type: type, indent: indent, start: start, items: [{ content: content, children: [] }] }
+        if (top) top.items[top.items.length - 1].children.push(list)
+        else listRoot = list
+        stack.push(list)
+      }
+      const splitRow = function (line) {
+        return line.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(function (cell) { return cell.trim() })
+      }
+      const flushTable = function () {
+        if (!table.length) return
+        const rows = table
+        table = []
+        const isSeparator = rows.length > 1 && /^\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?\s*$/.test(rows[1])
+        if (!isSeparator) { paragraph = paragraph.concat(rows); flushParagraph(); return }
+        const key = nextKey()
+        const head = splitRow(rows[0])
+        const body = rows.slice(2).map(splitRow)
+        blocks.push(h('div', { key: key, className: 'sc-md-table-wrap' },
+          h('table', { className: 'sc-md-table' },
+            h('thead', null, h('tr', null, head.map(function (cell, i) { return h('th', { key: i }, renderInline(cell, key + '-h' + i)) }))),
+            h('tbody', null, body.map(function (row, r) {
+              return h('tr', { key: r }, row.map(function (cell, i) { return h('td', { key: i }, renderInline(cell, key + '-' + r + '-' + i)) }))
+            })))))
+      }
+      const flushAll = function () { flushParagraph(); flushQuote(); flushList(); flushTable() }
+
+      source.split('\n').forEach(function (line) {
+        const placeholder = /^\s*\u0000B(\d+)\u0000\s*$/.exec(line)
+        if (placeholder) {
+          flushAll()
+          const block = stash[Number(placeholder[1])]
+          const key = nextKey()
+          blocks.push(block.kind === 'code'
+            ? h('pre', { key: key, className: 'sc-md-pre' }, h('code', null, block.value))
+            : richMath(block.value, true, key))
+          return
+        }
+        if (/^\s*\|.*\|\s*$/.test(line)) {
+          if (!table.length) { flushParagraph(); flushQuote(); flushList() }
+          table.push(line)
+          return
+        }
+        if (table.length) flushTable()
+        if (!line.trim()) { flushParagraph(); flushQuote(); return }
+        const heading = /^\s{0,3}(#{1,6})\s+(.*?)\s*#*\s*$/.exec(line)
+        if (heading) {
+          flushAll()
+          const key = nextKey()
+          const level = Math.min(heading[1].length, 4)
+          blocks.push(h('div', { key: key, className: 'sc-md-h sc-md-h' + level, role: 'heading', 'aria-level': level + 2 }, renderInline(heading[2], key)))
+          return
+        }
+        if (/^\s{0,3}([-*_])(\s*\1){2,}\s*$/.test(line)) { flushAll(); blocks.push(h('hr', { key: nextKey(), className: 'sc-md-hr' })); return }
+        const bullet = /^(\s*)[-*+•]\s+(.*)$/.exec(line)
+        const ordered = /^(\s*)(\d+)[.)、]\s+(.*)$/.exec(line)
+        if (bullet || ordered) {
+          flushParagraph()
+          flushQuote()
+          const indent = (bullet ? bullet[1] : ordered[1]).replace(/\t/g, '    ').length
+          if (bullet) addItem('ul', indent, bullet[2], 1)
+          else addItem('ol', indent, ordered[3], Number(ordered[2]))
+          return
+        }
+        const quoted = /^\s*>\s?(.*)$/.exec(line)
+        if (quoted) { flushParagraph(); flushList(); quote.push(quoted[1]); return }
+        if (listRoot && /^\s+\S/.test(line) && stack.length) {
+          const deepest = stack[stack.length - 1]
+          const item = deepest.items[deepest.items.length - 1]
+          item.content += '\n' + line.trim()
+          return
+        }
+        flushList()
+        flushQuote()
+        paragraph.push(line)
+      })
+      flushAll()
+      return blocks
+    }
+
+    function persistChat(lessonId, kind, key, messages) {
+      if (!lessonId || !key) return
+      yktFetch('chats/save', { method: 'POST', body: { lessonId: lessonId, kind: kind, key: key, messages: Array.isArray(messages) ? messages : [] } })
+        .catch(function () { /* saving is best effort */ })
+    }
+
+    /** Persist only the threads that changed since the last snapshot. */
+    function persistChangedChats(lessonId, kind, savedMap, nextMap) {
+      Object.keys(Object.assign({}, savedMap, nextMap)).forEach(function (key) {
+        const next = Array.isArray(nextMap[key]) ? nextMap[key] : []
+        if (JSON.stringify(next) === JSON.stringify(savedMap[key] || [])) return
+        savedMap[key] = next.slice()
+        persistChat(lessonId, kind, key, next)
+      })
+    }
+
+    /** Chat bubble content: assistant answers are rich, student text stays plain. */
+    function chatBubble(message) {
+      if (message && message.role === 'assistant') {
+        return h('div', { className: 'sc-ykt-msg-bubble sc-md' }, renderRich(message.text || '', 'msg'))
+      }
+      return h('div', { className: 'sc-ykt-msg-bubble' }, message ? message.text : '')
+    }
+
+    /** Unticked pages of one lesson as { [presentationId]: [index, ...] }. */
+    function summaryExcludeFor(map, lessonId) {
+      const lesson = (map && map[lessonId]) || {}
+      const out = {}
+      Object.keys(lesson).forEach(function (presentationId) {
+        const pages = Object.keys(lesson[presentationId] || {})
+          .filter(function (index) { return lesson[presentationId][index] })
+          .map(Number)
+          .filter(function (index) { return index > 0 })
+          .sort(function (a, b) { return a - b })
+        if (pages.length) out[presentationId] = pages
+      })
+      return out
     }
 
     function YktSlideViewer(props) {
@@ -5062,19 +5750,31 @@ var qrcode = function() {
         setChatError('')
         updateChats(function (current) { return current.concat([{ role: 'user', text: question }]) })
         setSending(true)
-        const overlay = buildOverlayDataUrl(strokes, natural.w, natural.h)
-        yktFetch('page-chat', {
-          method: 'POST',
-          body: {
-            lessonId: props.lessonId,
-            presentationId: props.presentationId,
-            slideIndex: slide.index,
-            question: question,
-            history: messages.slice(-8),
-            annotations: strokes,
-            overlay: overlay,
-          },
-        })
+        const body = {
+          lessonId: props.lessonId,
+          presentationId: props.presentationId,
+          slideIndex: slide.index,
+          question: question,
+          history: messages.slice(-8),
+          annotations: strokes,
+        }
+        const sentStrokes = strokes.slice()
+        const prepared = sentStrokes.length
+          ? fetchSlideDataUrl(props.lessonId, props.presentationId, slide.index)
+              .then(function (dataUrl) { return buildAnnotationImages(sentStrokes, dataUrl) })
+              .then(function (images) {
+                body.focus = images.focus
+                body.marked = images.marked
+                return body
+              })
+              .catch(function () {
+                // Fall back to the transparent stroke layer + coordinates.
+                body.overlay = buildOverlayDataUrl(sentStrokes, natural.w, natural.h)
+                return body
+              })
+          : Promise.resolve(body)
+        prepared
+          .then(function (payload) { return yktFetch('page-chat', { method: 'POST', body: payload }) })
           .then(function (data) {
             updateChats(function (current) { return current.concat([{ role: 'assistant', text: data.answer || '' }]) })
           })
@@ -5180,7 +5880,7 @@ var qrcode = function() {
               { className: 'sc-ykt-chat-list', ref: listRef },
               messages.length
                 ? messages.map(function (message, messageIndex) {
-                    return h('div', { key: messageIndex, className: 'sc-ykt-msg', 'data-role': message.role }, h('div', { className: 'sc-ykt-msg-bubble' }, message.text))
+                    return h('div', { key: messageIndex, className: 'sc-ykt-msg', 'data-role': message.role }, chatBubble(message))
                   })
                 : h('p', { className: 'sc-ykt-chat-empty' }, t('ykt.chatEmpty')),
               sending ? h('div', { className: 'sc-ykt-chat-thinking' }, t('ykt.chatThinking')) : null
@@ -5249,7 +5949,13 @@ var qrcode = function() {
       const [summaryError, setSummaryError] = React.useState('')
       const [cardsBusy, setCardsBusy] = React.useState(false)
       const [annotations, setAnnotations] = React.useState({})
+      // Unticked slides per lesson: { [lessonId]: { [presentationId]: { [index]: true } } }.
+      // Everything is included by default, so decks never opened stay included.
+      const [slideExcludes, setSlideExcludes] = React.useState({})
       const [pageChats, setPageChats] = React.useState({})
+      const [boardSavedChats, setBoardSavedChats] = React.useState({})
+      const [chatResetEpoch, setChatResetEpoch] = React.useState(0)
+      const savedPageChatsRef = React.useRef({ lessonId: '', map: {} })
       const [viewerIndex, setViewerIndex] = React.useState(-1)
       const requestEpoch = React.useRef(0)
 
@@ -5330,15 +6036,40 @@ var qrcode = function() {
         [summaryJobs, refreshSummary]
       )
 
+      React.useEffect(
+        function () {
+          const saved = savedPageChatsRef.current
+          if (!saved.lessonId) return
+          persistChangedChats(saved.lessonId, 'page', saved.map, pageChats || {})
+        },
+        [pageChats]
+      )
+
+      const clearLessonChats = function (lessonId) {
+        if (!lessonId) return
+        yktFetch('chats/clear', { method: 'POST', body: { lessonId: lessonId } })
+          .then(function () {
+            savedPageChatsRef.current = { lessonId: lessonId, map: {} }
+            setPageChats({})
+            setBoardSavedChats({})
+            setChatResetEpoch(function (value) { return value + 1 })
+            setNotice(t('ykt.chatStoreCleared'))
+          })
+          .catch(function (cause) { setError((cause && cause.message) || String(cause)) })
+      }
+
       const startSummary = function (lessonId, force) {
         if (!lessonId) return
+        const exclude = summaryExcludeFor(slideExcludes, lessonId)
+        const excludedTotal = Object.keys(exclude).reduce(function (sum, id) { return sum + exclude[id].length }, 0)
         setSummaryError('')
         setSummaryJobs(function (prev) {
           const next = Object.assign({}, prev)
           next[lessonId] = { lessonId: lessonId, status: 'queued', phase: 'prepare', progress: 0.01, message: t('ykt.summaryPhase.prepare'), readSlides: 0, totalSlides: 0 }
           return next
         })
-        yktFetch('summary/start', { method: 'POST', body: { lessonId: lessonId, force: !!force } })
+        // A partial selection never reuses the cached full summary.
+        yktFetch('summary/start', { method: 'POST', body: { lessonId: lessonId, force: !!force || excludedTotal > 0, exclude: exclude } })
           .then(function (data) {
             if (!data || !data.job) return
             setSummaryJobs(function (prev) {
@@ -5577,6 +6308,18 @@ var qrcode = function() {
         setSlides([])
         setViewerIndex(-1)
         setSummaryError('')
+        setPageChats({})
+        setBoardSavedChats({})
+        savedPageChatsRef.current = { lessonId: '', map: {} }
+        yktFetch('chats/load', { method: 'POST', body: { lessonId: lessonId } })
+          .catch(function () { return { page: {}, board: {} } })
+          .then(function (data) {
+            if (requestEpoch.current !== epoch) return
+            const page = (data && data.page) || {}
+            savedPageChatsRef.current = { lessonId: lessonId, map: Object.assign({}, page) }
+            setPageChats(function (prev) { return Object.assign({}, page, prev) })
+            setBoardSavedChats((data && data.board) || {})
+          })
         yktFetch('lesson?lessonId=' + encodeURIComponent(lessonId))
           .then(function (data) {
             if (requestEpoch.current !== epoch) return undefined
@@ -5721,6 +6464,50 @@ var qrcode = function() {
         const summaryHasError = summaryJob && summaryJob.status === 'error'
         const summaryText = summaryMarkdown(activeSummary)
         const currentPresentationId = (presentation && presentation.id) || (presentations[0] && presentations[0].id) || ''
+        const lessonExcludes = summaryExcludeFor(slideExcludes, lessonId)
+        const currentExcluded = (slideExcludes[lessonId] && slideExcludes[lessonId][currentPresentationId]) || {}
+        const pickedCount = slides.filter(function (slide) { return !currentExcluded[slide.index] }).length
+        const excludedTotal = Object.keys(lessonExcludes).reduce(function (sum, id) { return sum + lessonExcludes[id].length }, 0)
+        const otherExcluded = excludedTotal - (lessonExcludes[currentPresentationId] ? lessonExcludes[currentPresentationId].length : 0)
+        const setCurrentExcluded = function (updater) {
+          setSlideExcludes(function (prev) {
+            const next = Object.assign({}, prev)
+            const lesson = Object.assign({}, next[lessonId] || {})
+            const current = Object.assign({}, lesson[currentPresentationId] || {})
+            lesson[currentPresentationId] = updater(current)
+            next[lessonId] = lesson
+            return next
+          })
+        }
+        const toggleSlide = function (index) {
+          setCurrentExcluded(function (current) {
+            if (current[index]) delete current[index]
+            else current[index] = true
+            return current
+          })
+        }
+        const pickAll = function () { setCurrentExcluded(function () { return {} }) }
+        const pickNone = function () {
+          setCurrentExcluded(function () {
+            const all = {}
+            slides.forEach(function (slide) { all[slide.index] = true })
+            return all
+          })
+        }
+        const pickInvert = function () {
+          setCurrentExcluded(function (current) {
+            const flipped = {}
+            slides.forEach(function (slide) { if (!current[slide.index]) flipped[slide.index] = true })
+            return flipped
+          })
+        }
+        const startLessonSummary = function (force) {
+          if (presentations.length <= 1 && slides.length && pickedCount === 0) {
+            setError(t('ykt.pickEmpty'))
+            return
+          }
+          startSummary(lessonId, force)
+        }
         return h(
           'div',
           { className: 'sc-ykt-detail' },
@@ -5737,15 +6524,20 @@ var qrcode = function() {
                 type: 'button',
                 className: 'sc-btn sc-btn-primary',
                 disabled: summaryRunning,
-                onClick: function () { startSummary(lessonId, !!activeSummary) },
+                onClick: function () { startLessonSummary(!!activeSummary) },
               }, summaryRunning
                 ? t('ykt.summaryInProgress', { pct: Math.round((Number(summaryJob.progress) || 0) * 100) })
-                : (activeSummary ? t('ykt.summaryAgain') : t('ykt.summaryStart'))),
+                : excludedTotal > 0
+                  ? t('ykt.summaryStartPicked', { n: excludedTotal })
+                  : (activeSummary ? t('ykt.summaryAgain') : t('ykt.summaryStart'))),
               h('button', { type: 'button', className: 'sc-btn', onClick: copyAnalysis }, t('ykt.analyze')),
               h('button', { type: 'button', className: 'sc-btn', onClick: function () { if (selectedCourse) openCourse(selectedCourse) } }, t('ykt.refresh'))
             )
           ),
           h('p', { className: 'sc-ykt-hint' }, t('ykt.summaryHint')),
+          h('div', { className: 'sc-ykt-chatstore' },
+            h('span', { className: 'sc-ykt-hint' }, t('ykt.chatStoreHint')),
+            h('button', { type: 'button', className: 'sc-linkbtn', onClick: function () { clearLessonChats(lessonId) } }, t('ykt.chatStoreClear'))),
           summaryHasError && activeSummary
             ? h('div', { className: 'sc-alert', role: 'alert' }, summaryJob.error || t('ykt.summaryFailed', { detail: '' }))
             : null,
@@ -5756,6 +6548,8 @@ var qrcode = function() {
             key: 'board-' + lessonId,
             t: t,
             lessonId: lessonId,
+            savedChats: boardSavedChats,
+            chatResetEpoch: chatResetEpoch,
             presentationId: currentPresentationId,
             courseName: info.courseName || selectedCourse.name || '',
             lessonTitle: info.lessonName || lessonSummary.lessonTitle || '',
@@ -5785,7 +6579,7 @@ var qrcode = function() {
                     })
                   },
                   onCards: function () { saveSummaryCards(lessonId) },
-                  onRegenerate: function () { startSummary(lessonId, true) },
+                  onRegenerate: function () { startLessonSummary(true) },
                 })
               : summaryHasError
                 ? h('div', { className: 'sc-alert', role: 'alert' }, summaryJob.error || summaryError)
@@ -5810,9 +6604,28 @@ var qrcode = function() {
             ? h('p', { className: 'sc-muted' }, t('ykt.noSlides'))
             : null,
           slides.length
+            ? h('div', { className: 'sc-ykt-pickbar' },
+                h('div', { className: 'sc-ykt-pickbar-text' },
+                  h('strong', { className: 'sc-ykt-pickbar-count' }, t('ykt.pickCount', { picked: pickedCount, total: slides.length })),
+                  h('span', { className: 'sc-ykt-hint' }, otherExcluded > 0 ? t('ykt.pickHint') + ' ' + t('ykt.pickOther', { n: otherExcluded }) : t('ykt.pickHint'))),
+                h('div', { className: 'sc-ykt-pickbar-actions' },
+                  h('button', { type: 'button', className: 'sc-btn sc-btn-sm', disabled: summaryRunning || pickedCount === slides.length, onClick: pickAll }, t('ykt.pickAll')),
+                  h('button', { type: 'button', className: 'sc-btn sc-btn-sm', disabled: summaryRunning || pickedCount === 0, onClick: pickNone }, t('ykt.pickNone')),
+                  h('button', { type: 'button', className: 'sc-btn sc-btn-sm', disabled: summaryRunning, onClick: pickInvert }, t('ykt.pickInvert'))))
+            : null,
+          slides.length
             ? h('div', { className: 'sc-ykt-slides' }, slides.map(function (slide, slidePosition) {
                 const src = slideImageUrl(slide.cover)
-                return h('figure', { className: 'sc-ykt-slide', key: slide.id || String(slide.index) },
+                const excluded = !!currentExcluded[slide.index]
+                return h('figure', { className: 'sc-ykt-slide', key: slide.id || String(slide.index), 'data-excluded': excluded ? '1' : '0' },
+                  h('label', { className: 'sc-ykt-slide-pick', title: t('ykt.pickSlide', { n: slide.index }) },
+                    h('input', {
+                      type: 'checkbox',
+                      checked: !excluded,
+                      disabled: summaryRunning,
+                      'aria-label': t('ykt.pickSlide', { n: slide.index }),
+                      onChange: function () { toggleSlide(slide.index) },
+                    })),
                   h('button', {
                     type: 'button',
                     className: 'sc-ykt-slide-open',
@@ -5821,7 +6634,7 @@ var qrcode = function() {
                   },
                     src ? h('img', { src: src, alt: t('ykt.slideAlt', { index: slide.index }), loading: 'lazy' }) : h('div', { className: 'sc-ykt-slide-empty' }, '—'),
                     h('span', { className: 'sc-ykt-slide-zoom' }, '⤢')),
-                  h('figcaption', null, t('ykt.slideN', { n: slide.index })))
+                  h('figcaption', null, t('ykt.slideN', { n: slide.index }), excluded ? h('span', { className: 'sc-ykt-slide-off' }, ' · ' + t('ykt.pickExcluded')) : null))
               }))
             : null,
           viewerIndex >= 0 && slides[viewerIndex]
@@ -6265,6 +7078,16 @@ var qrcode = function() {
       '.sc-ykt-progress-row{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:11px;border:1px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-1)}',
       '.sc-ykt-progress-score{font-size:12px;color:var(--dsw-alias-label-secondary);white-space:nowrap}',
       '.sc-ykt-slides{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}',
+      '.sc-ykt-pickbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:8px 12px;border-radius:12px;border:1px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-1)}',
+      '.sc-ykt-pickbar-text{display:flex;flex-direction:column;gap:2px;min-width:0}',
+      '.sc-ykt-pickbar-count{display:block;font-size:13px;font-weight:600}',
+      '.sc-ykt-pickbar-text .sc-ykt-hint{display:block;margin:0}',
+      '.sc-ykt-pickbar-actions{display:flex;gap:6px;flex-wrap:wrap}',
+      '.sc-ykt-slide-pick{position:absolute;left:8px;top:8px;z-index:2;display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;background:color-mix(in srgb,var(--dsw-alias-bg-layer-1) 88%,transparent);box-shadow:0 1px 3px rgba(0,0,0,.18);cursor:pointer}',
+      '.sc-ykt-slide-pick input{width:16px;height:16px;margin:0;cursor:pointer;accent-color:var(--dsw-alias-button-primary-fill,var(--dsw-alias-brand-primary))}',
+      '.sc-ykt-slide[data-excluded="1"] .sc-ykt-slide-open img{opacity:.38;filter:grayscale(1)}',
+      '.sc-ykt-slide[data-excluded="1"]{border-style:dashed}',
+      '.sc-ykt-slide-off{color:var(--dsw-alias-label-tertiary)}',
       '.sc-ykt-slide{margin:0;display:flex;flex-direction:column;gap:5px;border:1px solid var(--dsw-alias-border-l1);border-radius:10px;overflow:hidden;background:var(--dsw-alias-bg-layer-1)}',
       '.sc-ykt-slide img{display:block;width:100%;height:auto;background:var(--dsw-alias-bg-layer-2)}',
       '.sc-ykt-slide figcaption{font-size:11px;color:var(--dsw-alias-label-tertiary);padding:0 8px 7px}',
@@ -6353,6 +7176,27 @@ var qrcode = function() {
       '.sc-ykt-msg[data-role="user"]{justify-content:flex-end}',
       '.sc-ykt-msg-bubble{max-width:92%;padding:8px 10px;border-radius:10px;font-size:12.5px;line-height:1.62;white-space:pre-wrap;word-break:break-word;background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary)}',
       '.sc-ykt-msg[data-role="user"] .sc-ykt-msg-bubble{background:var(--dsw-alias-brand-primary);color:var(--dsw-alias-label-primary-inverted)}',
+      '.sc-ykt-msg-bubble.sc-md{white-space:normal;display:flex;flex-direction:column;gap:8px;min-width:0}',
+      '.sc-md>*{margin:0}',
+      '.sc-md-p{margin:0;line-height:1.7}',
+      '.sc-md-h{font-weight:600;line-height:1.4;margin:4px 0 0}',
+      '.sc-md-h1,.sc-md-h2{font-size:15px}',
+      '.sc-md-h3{font-size:14px}',
+      '.sc-md-h4{font-size:13px}',
+      '.sc-md-list{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px;line-height:1.7}',
+      '.sc-md-list .sc-md-list{margin-top:4px}',
+      '.sc-md-quote{margin:0;padding:4px 0 4px 12px;border-left:2px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-secondary)}',
+      '.sc-md-hr{width:100%;border:0;border-top:1px solid var(--dsw-alias-border-l1);margin:4px 0}',
+      '.sc-md-code{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:.92em;padding:1px 5px;border-radius:6px;background:color-mix(in srgb,var(--dsw-alias-label-primary) 7%,transparent)}',
+      '.sc-md-pre{margin:0;padding:10px 12px;border-radius:10px;overflow:auto;font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:12px;line-height:1.55;background:color-mix(in srgb,var(--dsw-alias-label-primary) 6%,transparent);white-space:pre}',
+      '.sc-md-table-wrap{max-width:100%;overflow-x:auto}',
+      '.sc-md-table{border-collapse:collapse;font-size:12px;line-height:1.5}',
+      '.sc-md-table th,.sc-md-table td{padding:4px 8px;border:1px solid var(--dsw-alias-border-l1);text-align:left;vertical-align:top}',
+      '.sc-md-table th{font-weight:600;background:color-mix(in srgb,var(--dsw-alias-label-primary) 4%,transparent)}',
+      '.sc-math{font-family:"Cambria Math","STIX Two Math","Latin Modern Math","Times New Roman",math,serif}',
+      '.sc-math math{font-size:1.12em}',
+      '.sc-math-block{max-width:100%;overflow-x:auto;overflow-y:hidden;padding:4px 0;text-align:center}',
+      '.sc-math-block math{font-size:1.2em}',
       '.sc-ykt-chat-thinking{font-size:12px;color:var(--dsw-alias-label-tertiary)}',
       '.sc-ykt-chat-quick{display:flex;gap:5px;flex-wrap:wrap;flex:none}',
       '.sc-ykt-chat-input{display:flex;gap:6px;align-items:flex-end;flex:none}',
@@ -6409,6 +7253,9 @@ var qrcode = function() {
       '.sc-kb-chat{flex:1 1 300px;max-width:420px;min-width:0;max-height:560px;display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:14px;border:1px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-1);box-shadow:0 6px 18px rgba(0,0,0,.06);animation:sc-kb-pop .2s ease both}',
       '.sc-kb[data-tall="1"] .sc-kb-chat{max-height:none}',
       '.sc-kb-chat-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex:none}',
+      '.sc-kb-chat-tools{display:flex;align-items:center;gap:4px;flex:none}',
+      '.sc-ykt-chatstore{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}',
+      '.sc-ykt-chatstore .sc-ykt-hint{margin:0;flex:1 1 280px;min-width:0}',
       '.sc-kb-chat-heading{display:flex;flex-direction:column;gap:2px;min-width:0}',
       '.sc-kb-chat-heading strong{font-size:13px;font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
       '.sc-kb-chat-path{font-size:11px;color:var(--dsw-alias-label-tertiary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
@@ -6435,6 +7282,164 @@ var qrcode = function() {
     ].join('\n')
 
     // ------------------------------------------------------------------
+    // Apple theme layer
+    // ------------------------------------------------------------------
+    // Appended after CSS. Every plugin surface draws from the host's
+    // --dsw-alias-* variables, so the theme rebinds those variables inside the
+    // plugin roots (pale-gray canvas, white cards, a single Apple blue, SF Pro)
+    // and then restyles shape only: capsule buttons, segmented tabs, 18px cards,
+    // frosted chrome. Geometry (heights/paddings) is left alone on purpose so
+    // the existing layouts keep their measurements. Light/dark follows the host
+    // via html[data-sc-theme], set by syncHostTheme() below.
+    const SC_ROOTS = ['.sc-page', '.sc-ykt-viewer', '.sc-kb-menu', '.sc-dock']
+    const scRoots = function (prefix) {
+      return SC_ROOTS.map(function (root) { return (prefix ? prefix + ' ' : '') + root }).join(',')
+    }
+    const APPLE_CSS = [
+      scRoots('') + '{' +
+        /* Apple tokens — light */
+        '--sc-canvas:#f5f5f7;--sc-card:#ffffff;--sc-fill:#ececf0;' +
+        '--sc-fg:#1d1d1f;--sc-fg-2:#424245;--sc-muted:#6e6e73;--sc-meta:#86868b;' +
+        '--sc-border:#d2d2d7;--sc-border-soft:#e8e8ed;' +
+        '--sc-accent-fill:#0071e3;--sc-accent-hover:#0077ed;--sc-accent-active:#0066cc;--sc-accent-text:#0066cc;--sc-on-accent:#ffffff;' +
+        '--sc-danger:#d70015;--sc-success:#248a3d;--sc-warn:#b25000;' +
+        '--sc-elev-raised:0 12px 32px rgba(0,0,0,.08);' +
+        '--sc-focus-ring:0 0 0 4px color-mix(in srgb,var(--sc-accent-fill) 35%,transparent);' +
+        '--sc-radius-pill:980px;--sc-radius-card:18px;--sc-radius-field:10px;' +
+        '--sc-ease:cubic-bezier(.28,0,.22,1);--sc-fast:150ms;--sc-base:220ms;' +
+        '--sc-font-display:"SF Pro Display","SF Pro Icons","PingFang SC","Helvetica Neue",Helvetica,Arial,"Microsoft YaHei",sans-serif;' +
+        '--sc-font-text:"SF Pro Text","SF Pro Icons","PingFang SC","Helvetica Neue",Helvetica,Arial,"Microsoft YaHei",sans-serif;' +
+        /* host aliases rebound to Apple tokens */
+        '--dsw-alias-bg-layer-1:var(--sc-card);--dsw-alias-bg-layer-2:var(--sc-fill);' +
+        '--dsw-alias-label-primary:var(--sc-fg);--dsw-alias-label-secondary:var(--sc-fg-2);--dsw-alias-label-tertiary:var(--sc-muted);--dsw-alias-label-primary-inverted:var(--sc-on-accent);' +
+        '--dsw-alias-border-l1:var(--sc-border-soft);--dsw-alias-border-l2:var(--sc-border);' +
+        '--dsw-alias-brand-primary:var(--sc-accent-text);--dsw-alias-button-primary-fill:var(--sc-accent-fill);--dsw-alias-button-primary-hover:var(--sc-accent-hover);' +
+        '--dsw-alias-interactive-bg-hover:color-mix(in srgb,var(--sc-fg) 5%,transparent);' +
+        '--dsw-alias-state-error-primary:var(--sc-danger);--dsw-alias-state-success-primary:var(--sc-success);--dsw-alias-state-warn-primary:var(--sc-warn);' +
+        'font-family:var(--sc-font-text);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}',
+      scRoots('html[data-sc-theme="dark"]') + '{' +
+        /* Apple dark chapter: black canvas, graphite steps, bright link blue */
+        '--sc-canvas:#000000;--sc-card:#1c1c1e;--sc-fill:#2c2c2e;' +
+        '--sc-fg:#f5f5f7;--sc-fg-2:#d2d2d7;--sc-muted:#a1a1a6;--sc-meta:#86868b;' +
+        '--sc-border:#424245;--sc-border-soft:#333336;' +
+        '--sc-accent-text:#2997ff;--sc-danger:#ff6961;--sc-success:#30d158;--sc-warn:#ffb340;' +
+        '--sc-elev-raised:0 12px 32px rgba(0,0,0,.5);' +
+        '--dsw-alias-interactive-bg-hover:color-mix(in srgb,var(--sc-fg) 8%,transparent)}',
+
+      // Canvas + type
+      '.sc-page{background:var(--sc-canvas);letter-spacing:-0.01em}',
+      '.sc-title,.sc-ykt-title,.sc-ykt-summary-title,.sc-ykt-login-title,.sc-card-title,.sc-stat-value,.sc-start-number,.sc-start h3,.sc-flashcard-front,.sc-kb-title{font-family:var(--sc-font-display);letter-spacing:-0.015em}',
+      '.sc-title{font-size:28px;line-height:1.14;font-weight:600}',
+      '.sc-stat-value,.sc-start-number{font-weight:600}',
+      '.sc-brand-icon{border-radius:12px;color:var(--sc-on-accent);background:var(--sc-accent-fill)}',
+      '.sc-badge-accent{color:var(--sc-accent-text);background:color-mix(in srgb,var(--sc-accent-fill) 12%,var(--sc-card))}',
+
+      // Segmented controls (main tabs + sub tabs)
+      '.sc-tabs,.sc-ykt-subtabs{display:inline-flex;align-self:flex-start;flex-wrap:wrap;gap:2px;padding:3px;border:0;border-radius:var(--sc-radius-pill);background:var(--sc-fill);max-width:100%}',
+      '.sc-tab,.sc-ykt-subtab{margin:0;border:0;border-radius:var(--sc-radius-pill);padding:6px 16px;color:var(--sc-fg-2);transition:background-color var(--sc-fast) var(--sc-ease),color var(--sc-fast) var(--sc-ease),box-shadow var(--sc-fast) var(--sc-ease)}',
+      '.sc-tab:hover,.sc-ykt-subtab:hover{background:transparent;color:var(--sc-fg)}',
+      '.sc-tab[data-active="1"],.sc-ykt-subtab[data-active="1"]{background:var(--sc-card);color:var(--sc-fg);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12),0 0 0 .5px rgba(0,0,0,.04)}',
+
+      // Buttons: Apple capsule family
+      '.sc-btn{border-radius:var(--sc-radius-pill);border-color:var(--sc-border);background:transparent;font-weight:500;transition:background-color var(--sc-fast) var(--sc-ease),border-color var(--sc-fast) var(--sc-ease),box-shadow var(--sc-fast) var(--sc-ease),transform var(--sc-fast) var(--sc-ease)}',
+      '.sc-btn:hover{background:var(--dsw-alias-interactive-bg-hover);border-color:var(--sc-meta)}',
+      '.sc-btn:active:not(:disabled),.sc-ykt-chip:active,.sc-grade:active:not(:disabled){transform:scale(.98)}',
+      '.sc-btn-primary{background:var(--sc-accent-fill);border-color:transparent;color:var(--sc-on-accent)}',
+      '.sc-btn-primary:hover{background:var(--sc-accent-hover);border-color:transparent}',
+      '.sc-btn-primary:active:not(:disabled){background:var(--sc-accent-active)}',
+      '.sc-ykt-viewer .sc-ykt-viewer-close{border-color:rgba(255,255,255,.24);color:inherit}',
+      '.sc-ykt-viewer .sc-ykt-viewer-close:hover{background:rgba(255,255,255,.12)}',
+      '.sc-iconbtn,.sc-linkbtn{border-radius:var(--sc-radius-pill)}',
+      '.sc-linkbtn{color:var(--sc-accent-text)}',
+      '.sc-btn:focus-visible,.sc-tab:focus-visible,.sc-ykt-subtab:focus-visible,.sc-ykt-chip:focus-visible,.sc-ykt-course:focus-visible,.sc-ykt-row:focus-visible,.sc-grade:focus-visible,.sc-iconbtn:focus-visible,.sc-linkbtn:focus-visible,.sc-goalbtn:focus-visible,.sc-dock:focus-visible,.sc-ykt-slide-open:focus-visible,.sc-ykt-tool:focus-visible{outline:none;box-shadow:var(--sc-focus-ring)}',
+
+      // Fields
+      '.sc-input{border-radius:var(--sc-radius-field);border-color:var(--sc-border);transition:border-color var(--sc-fast) var(--sc-ease),box-shadow var(--sc-fast) var(--sc-ease)}',
+      '.sc-input:hover{border-color:var(--sc-meta)}',
+      '.sc-input:focus,.sc-input:focus-visible{border-color:var(--sc-accent-fill);box-shadow:var(--sc-focus-ring)}',
+
+      // Cards and panels
+      '.sc-card,.sc-stat,.sc-start,.sc-ykt-course,.sc-ykt-login-card,.sc-empty-card,.sc-flashcard,.sc-ykt-summary{border-radius:var(--sc-radius-card);border-color:var(--sc-border-soft)}',
+      '.sc-flashcard{box-shadow:var(--sc-elev-raised)}',
+      '.sc-ykt-course{transition:box-shadow var(--sc-base) var(--sc-ease),border-color var(--sc-base) var(--sc-ease)}',
+      '.sc-ykt-course:hover{background:var(--sc-card);border-color:var(--sc-border-soft);box-shadow:var(--sc-elev-raised)}',
+      '.sc-ykt-course-go{color:var(--sc-accent-text)}',
+      '.sc-ykt-row{border-radius:14px;border-color:var(--sc-border-soft)}',
+      '.sc-ykt-slide{border-radius:12px;border-color:var(--sc-border-soft)}',
+      '.sc-ykt-pickbar{border-radius:14px;border-color:var(--sc-border-soft)}',
+      '.sc-ykt-slide-pick:focus-within{box-shadow:var(--sc-focus-ring)}',
+      '.sc-grade{border-radius:14px}',
+      '.sc-alert{border-radius:12px}',
+      '.sc-chip,.sc-tag{border-color:transparent}',
+      '.sc-ykt-chip{transition:background-color var(--sc-fast) var(--sc-ease),color var(--sc-fast) var(--sc-ease)}',
+      '.sc-ykt-chip[data-active="1"]{background:var(--sc-fg);border-color:transparent;color:var(--sc-canvas)}',
+      '.sc-progress-fill,.sc-mastery-fill[data-tone="learning"]{background:var(--sc-accent-fill)}',
+
+      // Knowledge board: neutral pegboard (no warm tint), soft Apple card lift
+      '.sc-kb-pegboard{background-color:var(--sc-fill);border-color:var(--sc-border-soft);border-radius:var(--sc-radius-card);box-shadow:none}',
+      '.sc-kb-tree{border-radius:14px;border-color:var(--sc-border-soft);box-shadow:var(--sc-elev-raised)}',
+      '.sc-kb-menu{border-radius:14px;border-color:var(--sc-border-soft);background:color-mix(in srgb,var(--sc-card) 88%,transparent);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);box-shadow:0 12px 32px rgba(0,0,0,.16)}',
+      '.sc-kb-menu-item{border-radius:8px}',
+
+      // Slide viewer + page chat
+      '.sc-ykt-viewer{background:rgba(0,0,0,.94)}',
+      '.sc-ykt-viewer-head{background:rgba(22,22,23,.8);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px)}',
+      '.sc-ykt-viewer-stage{background:#000}',
+      '.sc-ykt-tool{border-radius:var(--sc-radius-pill);padding:0 12px}',
+      '.sc-ykt-chat{background:var(--sc-card)}',
+      '.sc-ykt-chat-anno{border-radius:10px;color:var(--sc-accent-text);background:color-mix(in srgb,var(--sc-accent-fill) 10%,var(--sc-card))}',
+      '.sc-ykt-msg-bubble{border-radius:18px;padding:8px 12px}',
+      '.sc-ykt-msg[data-role="user"] .sc-ykt-msg-bubble{background:var(--sc-accent-fill);color:var(--sc-on-accent)}',
+
+      // Composer dock: frosted capsule
+      '.sc-dock{background:color-mix(in srgb,var(--sc-card) 78%,transparent);border-color:var(--sc-border-soft);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);transition:background-color var(--sc-fast) var(--sc-ease)}',
+      '.sc-dock-icon{color:var(--sc-accent-text)}',
+      '.sc-dock-badge[data-due="1"]{color:var(--sc-on-accent);background:var(--sc-accent-fill)}',
+
+      '@media (prefers-reduced-motion: reduce){.sc-btn,.sc-tab,.sc-ykt-subtab,.sc-ykt-chip,.sc-ykt-course,.sc-input,.sc-dock{transition:none!important}.sc-btn:active,.sc-ykt-chip:active,.sc-grade:active{transform:none!important}}',
+    ].join('\n')
+
+    /**
+     * Mirror the host's light/dark state onto html[data-sc-theme] by sampling
+     * the host's own background alias (outside our rebinding scope).
+     */
+    function syncHostTheme() {
+      if (typeof document === 'undefined' || !document.body) return function () {}
+      const probe = document.createElement('div')
+      probe.setAttribute('aria-hidden', 'true')
+      probe.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden;pointer-events:none;background:var(--dsw-alias-bg-layer-1,Canvas)'
+      document.body.appendChild(probe)
+      const media = typeof window !== 'undefined' && window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null
+      const update = function () {
+        let dark = media ? media.matches : false
+        try {
+          const match = /rgba?\(([\d.]+)[ ,]+([\d.]+)[ ,]+([\d.]+)(?:[ ,/]+([\d.]+))?/.exec(getComputedStyle(probe).backgroundColor || '')
+          if (match && (match[4] === undefined || Number(match[4]) > 0)) {
+            const luminance = (0.2126 * Number(match[1]) + 0.7152 * Number(match[2]) + 0.0722 * Number(match[3])) / 255
+            dark = luminance < 0.5
+          }
+        } catch (error) {
+          /* keep the media-query guess */
+        }
+        const next = dark ? 'dark' : 'light'
+        if (document.documentElement.getAttribute('data-sc-theme') !== next) document.documentElement.setAttribute('data-sc-theme', next)
+      }
+      update()
+      const observer = typeof MutationObserver === 'function' ? new MutationObserver(update) : null
+      if (observer) {
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'style', 'data-theme', 'data-color-mode'] })
+        observer.observe(document.body, { attributes: true, attributeFilter: ['class', 'style', 'data-theme', 'data-color-mode'] })
+      }
+      if (media && typeof media.addEventListener === 'function') media.addEventListener('change', update)
+      return function () {
+        if (observer) observer.disconnect()
+        if (media && typeof media.removeEventListener === 'function') media.removeEventListener('change', update)
+        if (probe.parentNode) probe.parentNode.removeChild(probe)
+        document.documentElement.removeAttribute('data-sc-theme')
+      }
+    }
+
+    // ------------------------------------------------------------------
     // Plugin registration
     // ------------------------------------------------------------------
     function apply(ctx) {
@@ -6448,9 +7453,11 @@ var qrcode = function() {
       ctx.effect(function () {
         const tag = document.createElement('style')
         tag.setAttribute('data-plugin', 'dsh-study-coach')
-        tag.textContent = CSS
+        tag.textContent = CSS + '\n' + APPLE_CSS
         document.head.appendChild(tag)
+        const stopThemeSync = syncHostTheme()
         return function () {
+          stopThemeSync()
           if (tag.parentNode) tag.parentNode.removeChild(tag)
         }
       })
@@ -6534,6 +7541,8 @@ var qrcode = function() {
         YktSummaryProgress: YktSummaryProgress,
         YktModelPicker: YktModelPicker,
         summaryMarkdown: summaryMarkdown,
+        texToMathML: texToMathML,
+        renderRich: renderRich,
         drawAnnotationStroke: drawAnnotationStroke,
         buildOverlayDataUrl: buildOverlayDataUrl,
         StudyDock: StudyDock,

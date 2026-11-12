@@ -7,6 +7,7 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
+import crypto from 'node:crypto'
 import { apply } from '../index.js'
 
 const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'study-coach-ai-'))
@@ -25,8 +26,61 @@ const config = {
 }
 
 let imageCounter = 0
+// A content-addressed store on disk, shaped like dsh-attachment-local: no
+// delete API, but imageHostPath() exposes where each object lives.
+const attachmentRoot = path.join(dataDir, 'dsh-home', 'attachments', 'v1')
+const attachmentCacheRoot = path.join(dataDir, 'dsh-home', 'cache', 'attachments')
+const attachmentStore = {
+  root: attachmentRoot,
+  cacheRoot: attachmentCacheRoot,
+  imageLimits: { maxImageBytes: 5_000_000, maxImagesPerMessage: 12 },
+  imageHostPath(ref) {
+    return path.join(attachmentRoot, 'objects', ref.sha256.slice(0, 2), ref.sha256)
+  },
+  async saveImage(input) {
+    // Mirror dsh-attachment-local: the declared type must match the bytes.
+    const b = input.data
+    const actual = b[0] === 0x89 && b[1] === 0x50 ? 'image/png' : b[0] === 0xff && b[1] === 0xd8 ? 'image/jpeg' : 'unknown'
+    if (actual !== input.mediaType) {
+      const error = new Error('Declared image type does not match its bytes.')
+      error.code = 'IMAGE_TYPE_MISMATCH'
+      throw error
+    }
+    imageCounter += 1
+    const sha256 = crypto.createHash('sha256').update(Buffer.from(b)).digest('hex')
+    const ref = {
+      attachmentId: 'img-' + imageCounter,
+      sha256,
+      mediaType: input.mediaType,
+      bytes: input.data.byteLength,
+      width: 800,
+      height: 600,
+      name: input.name,
+    }
+    const file = attachmentStore.imageHostPath(ref)
+    if (!fs.existsSync(file)) {
+      fs.mkdirSync(path.dirname(file), { recursive: true })
+      fs.writeFileSync(file, Buffer.from(b))
+      fs.chmodSync(file, 0o444)
+    }
+    savedImages.push(ref)
+    return ref
+  },
+}
+const storedObjects = () => {
+  const dir = path.join(attachmentRoot, 'objects')
+  if (!fs.existsSync(dir)) return []
+  return fs.readdirSync(dir).flatMap((shard) => fs.readdirSync(path.join(dir, shard)))
+}
+const requestCacheFiles = () => {
+  const dir = path.join(attachmentCacheRoot, 'request-images')
+  if (!fs.existsSync(dir)) return []
+  return fs.readdirSync(dir).flatMap((shard) => fs.readdirSync(path.join(dir, shard)))
+}
+const sessionIds = new Set()
 const savedImages = []
 let lastBoardChat = null
+let lastPageChat = null
 
 const llm = {
   async listProviders() {
@@ -48,10 +102,21 @@ const llm = {
   },
   async *stream(options) {
     assert.ok(options.sessionId, 'every plugin LLM call carries a session id for OpenCode routing')
+    sessionIds.add(options.sessionId)
+    // The host caches a provider-sized copy of every attached image.
+    for (const block of Array.isArray(options.messages[0].content) ? options.messages[0].content : []) {
+      if (block && block.type === 'image' && block.attachment && block.attachment.sha256) {
+        const variant = crypto.createHash('sha256').update(block.attachment.sha256 + ':request').digest('hex')
+        const file = path.join(attachmentCacheRoot, 'request-images', variant.slice(0, 2), variant)
+        fs.mkdirSync(path.dirname(file), { recursive: true })
+        fs.writeFileSync(file, 'variant')
+      }
+    }
     const content = Array.isArray(options.messages[0].content) ? options.messages[0].content : []
     const textBlock = content.filter((block) => block && block.type === 'text')[0]
     const prompt = textBlock ? textBlock.text : ''
     if (/【选中的知识点】/.test(prompt)) lastBoardChat = { prompt, content, system: options.system }
+    if (/【当前课件】/.test(prompt)) lastPageChat = { prompt, content, system: options.system }
     let answer
     if (/严格输出一个 JSON|knowledgePoints/.test(prompt)) {
       answer = JSON.stringify({
@@ -105,32 +170,7 @@ const ctx = {
         async deleteRecord() { credentialRecord = undefined },
       }
     }
-    if (name === 'attachments') {
-      return {
-        imageLimits: { maxImageBytes: 5_000_000, maxImagesPerMessage: 12 },
-        async saveImage(input) {
-          // Mirror dsh-attachment-local: the declared type must match the bytes.
-          const b = input.data
-          const actual = b[0] === 0x89 && b[1] === 0x50 ? 'image/png' : b[0] === 0xff && b[1] === 0xd8 ? 'image/jpeg' : 'unknown'
-          if (actual !== input.mediaType) {
-            const error = new Error('Declared image type does not match its bytes.')
-            error.code = 'IMAGE_TYPE_MISMATCH'
-            throw error
-          }
-          imageCounter += 1
-          const ref = {
-            attachmentId: 'img-' + imageCounter,
-            mediaType: input.mediaType,
-            bytes: input.data.byteLength,
-            width: 800,
-            height: 600,
-            name: input.name,
-          }
-          savedImages.push(ref)
-          return ref
-        },
-      }
-    }
+    if (name === 'attachments') return attachmentStore
     if (name === 'llm') return llm
     if (name === 'agentDefaultModel') {
       return { currentSelection: () => ({ provider: 'magpie', model: 'workbuddy/deepseek-v4.1-flash', reasoningEffort: 'max' }) }
@@ -199,7 +239,7 @@ globalThis.fetch = async (url) => {
 }
 
 apply(ctx, config)
-assert.equal(routes.size, 19)
+assert.equal(routes.size, 23)
 
 function request(url, method = 'GET', body = '') {
   const chunks = body ? [Buffer.from(body)] : []
@@ -253,6 +293,8 @@ assert.equal(job.result.knowledgePoints.length, 2)
 assert.equal(job.result.examPoints.length, 1)
 assert.ok(job.totalSlides >= 2)
 assert.ok(savedImages.length >= 2, 'slide images saved as attachments')
+assert.deepEqual(storedObjects(), [], 'summary slide images are deleted once read')
+assert.deepEqual(requestCacheFiles(), [], 'request-sized copies are deleted too')
 
 const cards = await call('summary/cards', 'POST', JSON.stringify({ lessonId: 'L1' }))
 assert.equal(cards.body.ok, true)
@@ -264,6 +306,36 @@ const cached = await call('summary/start', 'POST', JSON.stringify({ lessonId: 'L
 assert.equal(cached.body.data.job.cached, true)
 assert.equal(cached.body.data.job.status, 'done')
 
+// Unticked slides never reach the model: keep only P1 page 1.
+const imagesBeforePicked = savedImages.length
+const picked = await call('summary/start', 'POST', JSON.stringify({ lessonId: 'L1', force: true, exclude: { P1: [2], P2: [3, 4] } }))
+assert.equal(picked.body.ok, true, JSON.stringify(picked.body.error))
+let pickedJob = null
+for (let attempt = 0; attempt < 200; attempt += 1) {
+  const status = await call('summary/status?lessonId=L1')
+  pickedJob = status.body.data.job
+  if (pickedJob && pickedJob.status !== 'queued' && pickedJob.status !== 'running') break
+  await new Promise((resolve) => setTimeout(resolve, 20))
+}
+assert.equal(pickedJob.status, 'done', 'partial summary completes: ' + JSON.stringify(pickedJob && pickedJob.error))
+assert.equal(pickedJob.totalSlides, 1, 'only the ticked slide is summarized')
+assert.equal(pickedJob.excludedSlides, 3)
+assert.equal(pickedJob.result.meta.excludedSlideCount, 3)
+assert.equal(pickedJob.result.meta.truncated, false, 'unticked pages are not reported as truncation')
+assert.ok(savedImages.slice(imagesBeforePicked).every((ref) => !/ykt-slide-P2-|ykt-slide-P1-2$/.test(ref.name)), 'unticked slide images are not attached')
+
+const nonePicked = await call('summary/start', 'POST', JSON.stringify({ lessonId: 'L1', force: true, exclude: { P1: [1, 2], P2: [3, 4] } }))
+assert.equal(nonePicked.body.ok, true)
+let noneJob = null
+for (let attempt = 0; attempt < 200; attempt += 1) {
+  const status = await call('summary/status?lessonId=L1')
+  noneJob = status.body.data.job
+  if (noneJob && noneJob.status !== 'queued' && noneJob.status !== 'running') break
+  await new Promise((resolve) => setTimeout(resolve, 20))
+}
+assert.equal(noneJob.status, 'error')
+assert.match(noneJob.error, /至少勾选一页/)
+
 const chat = await call('page-chat', 'POST', JSON.stringify({
   lessonId: 'L1',
   presentationId: 'P1',
@@ -274,6 +346,56 @@ const chat = await call('page-chat', 'POST', JSON.stringify({
 assert.equal(chat.body.ok, true)
 assert.match(chat.body.data.answer, /ε-δ/)
 assert.equal(chat.body.data.page.index, 1)
+
+// Circled region: the close-up crop must come first and the prompt must pin the
+// answer to the marked spot instead of the whole slide.
+const tinyJpeg = 'data:image/jpeg;base64,' + Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 16, 0x4a, 0x46, 0x49, 0x46, 0, 1]).toString('base64')
+const markedJpeg = 'data:image/jpeg;base64,' + Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 16, 0x4a, 0x46, 0x49, 0x46, 0, 2]).toString('base64')
+// The same bytes already sit in the store from one of the user's own chats.
+await new Promise((resolve) => setTimeout(resolve, 1700))
+const userOwned = await attachmentStore.saveImage({ data: new Uint8Array(Buffer.from(tinyJpeg.split(',')[1], 'base64')), mediaType: 'image/jpeg', name: 'user-chat' })
+fs.utimesSync(attachmentStore.imageHostPath(userOwned), new Date(Date.now() - 60_000), new Date(Date.now() - 60_000))
+await new Promise((resolve) => setTimeout(resolve, 1700))
+const focusChat = await call('page-chat', 'POST', JSON.stringify({
+  lessonId: 'L1',
+  presentationId: 'P1',
+  slideIndex: 1,
+  question: '这个是什么意思？',
+  annotations: [{ tool: 'pen', points: [[0.2, 0.3], [0.4, 0.5]] }],
+  focus: [{ image: tinyJpeg, box: { x0: 0.14, y0: 0.25, x1: 0.46, y1: 0.55 } }],
+  marked: markedJpeg,
+}))
+assert.equal(focusChat.body.ok, true, JSON.stringify(focusChat.body.error))
+assert.deepEqual(storedObjects(), [userOwned.sha256], 'plugin images deleted; an identical image the user already had is kept')
+assert.deepEqual(requestCacheFiles(), [])
+const pageImages = lastPageChat.content.filter((block) => block.type === 'image')
+assert.equal(pageImages.length, 2, 'focus crop + marked page')
+assert.match(pageImages[0].attachment.name, /^ykt-focus-/, 'focus crop is the first image')
+assert.match(pageImages[1].attachment.name, /^ykt-marked-/, 'marked page replaces the plain slide')
+assert.match(lastPageChat.prompt, /前 1 张图是标注区域的放大裁剪图/)
+assert.match(lastPageChat.prompt, /不要概述整页/)
+assert.match(lastPageChat.system, /指代都指标注处/)
+const captions = lastPageChat.content.filter((block) => block.type === 'text').map((block) => block.text)
+assert.ok(captions.some((value) => /图片 1：学生标注区域放大图（位于整页横向 14%–46%，纵向 25%–55%）/.test(value)))
+
+assert.ok([...sessionIds].every((id) => /^dsh-study-coach-[0-9a-f-]{36}$/.test(id)), 'plugin calls use a plugin-only session id: ' + [...sessionIds].join(','))
+assert.equal(sessionIds.size, 1)
+
+// Saved chats: text only, bounded, clearable.
+const chatFile = path.join(dataDir, 'chats.json')
+const savedPage = await call('chats/save', 'POST', JSON.stringify({ lessonId: 'L1', kind: 'page', key: 'P1:1', messages: [{ role: 'user', text: '问' }, { role: 'assistant', text: '答' }, { role: 'system', text: 'x' }] }))
+assert.equal(savedPage.body.ok, true, JSON.stringify(savedPage.body.error))
+await call('chats/save', 'POST', JSON.stringify({ lessonId: 'L1', kind: 'board', key: 'n2', messages: Array.from({ length: 50 }, (_, i) => ({ role: i % 2 ? 'assistant' : 'user', text: 'm' + i })) }))
+const loadedChats = await call('chats/load', 'POST', JSON.stringify({ lessonId: 'L1' }))
+assert.deepEqual(loadedChats.body.data.page['P1:1'], [{ role: 'user', text: '问' }, { role: 'assistant', text: '答' }])
+assert.equal(loadedChats.body.data.board.n2.length, 30, 'threads keep the last 30 messages')
+assert.equal(loadedChats.body.data.board.n2[29].text, 'm49')
+assert.ok(fs.existsSync(chatFile))
+assert.doesNotMatch(fs.readFileSync(chatFile, 'utf8'), /base64|data:image/, 'no images are saved with chats')
+await call('chats/save', 'POST', JSON.stringify({ lessonId: 'L1', kind: 'page', key: 'P1:1', messages: [] }))
+assert.equal((await call('chats/load', 'POST', JSON.stringify({ lessonId: 'L1' }))).body.data.page['P1:1'], undefined, 'empty thread is removed')
+await call('chats/clear', 'POST', JSON.stringify({ lessonId: 'L1' }))
+assert.equal(fs.existsSync(chatFile), false, 'clearing the last lesson removes the file')
 
 // Right-click a knowledge-board node and ask about it.
 const boardChat = await call('board-chat', 'POST', JSON.stringify({

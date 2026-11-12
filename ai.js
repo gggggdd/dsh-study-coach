@@ -178,9 +178,13 @@ export function buildSlideNotesPrompt(options = {}) {
   const from = Math.max(1, Number(options.from) || 1)
   const to = Math.max(from, Number(options.to) || from)
   const total = Math.max(to, Number(options.total) || to)
+  const pages = list(options.pages).map(Number).filter((page) => Number.isInteger(page) && page > 0)
+  const contiguous = !pages.length || pages.every((page, index) => index === 0 || page === pages[index - 1] + 1)
   const lines = [
     `你正在阅读雨课堂课件《${lesson}》（课程：${course}）${presentation ? '，课件：' + presentation : ''}。`,
-    `下面是本课件第 ${from}–${to} 页图片（本课件共 ${total} 页）。请逐页精读，并输出「逐页笔记」。`,
+    contiguous
+      ? `下面是本课件第 ${from}–${to} 页图片（本课件共 ${total} 页）。请逐页精读，并输出「逐页笔记」。`
+      : `下面按顺序依次是本课件第 ${pages.join('、')} 页的图片（学生只选了这些页，中间未选的页没有附上）。请逐页精读，并输出「逐页笔记」，页码按上面列出的真实页码填写。`,
     '',
     '输出格式：',
     '第 N 页：',
@@ -211,6 +215,12 @@ export function buildSummaryPrompt(options = {}) {
     `课时：${lesson}`,
     `课件总页数：${total}`,
   ]
+  const excluded = Math.max(0, Number(options.excludedSlides) || 0)
+  if (excluded) {
+    lines.push(
+      `注意：学生只勾选了上面这 ${total} 页参与总结，另有 ${excluded} 页未勾选。只总结所选页的内容；下方的思维导图、课堂笔记和回放信息仅用于帮助理解所选页，不要据此补充未选页的知识点。`,
+    )
+  }
   if (replay.length) lines.push(`老师实际讲过的页：${replay.join('、')}（这些页更重要，可加权）`)
   if (mindMap) lines.push(`平台思维导图：\n${mindMap}`)
   if (lectureNotes) lines.push(`课堂笔记：\n${lectureNotes}`)
@@ -246,7 +256,11 @@ export function buildSummaryPrompt(options = {}) {
 }
 
 export const PAGE_CHAT_SYSTEM =
-  '你是学生的私人学习教练，正在陪他看雨课堂课件。回答要基于当前页可见内容，先直接回答问题，再解释依据；如果学生标注了区域，优先解释标注处。用中文，条理清楚，不编造页面没有的信息。'
+  '你是学生的私人学习教练，正在陪他看雨课堂课件。回答要基于当前页可见内容，先直接回答问题，再解释依据。' +
+  '如果学生在页面上圈画或高亮了内容，他的问题就是针对被标注的那一处：先准确认出并复述标注处的具体内容（文字、公式、图表或步骤），再只围绕这一处解释；' +
+  '问题里的“这个”“这里”“这一步”等指代都指标注处。整页其余内容只能作为理解标注处的上下文，不要泛泛总结整页。' +
+  '用中文，条理清楚，不编造页面没有的信息；如果标注处看不清，直说并请学生描述。' +
+  '可以使用 Markdown（小标题、加粗、列表、表格）；数学公式一律写成 LaTeX：行内用 \\( … \\)，单独成行的公式用 $$ … $$，不要用纯文本或 Unicode 拼凑公式。'
 
 export function describeAnnotations(annotations) {
   const strokes = list(annotations).filter(isRecord).slice(0, 12)
@@ -298,9 +312,44 @@ export function buildPageChatText(options = {}) {
       lines.push(`${item.role === 'user' ? '学生' : '你'}：${text(item.text, 3000)}`)
     }
   }
+  const images = list(options.images).filter(isRecord)
+  const focusCount = images.filter((image) => image.kind === 'focus').length
+  const markedPage = images.some((image) => image.kind === 'page' && image.marked)
+  const hasOverlay = images.some((image) => image.kind === 'overlay')
   lines.push('', '【当前问题】', question)
-  lines.push('', '请结合随附的课件页面图片回答；若随附了标注层图片，它是与页面同尺寸的透明标注层，请优先解释标注处。')
+  if (focusCount) {
+    lines.push(
+      '',
+      `【回答要求】学生的问题针对他圈画/高亮的地方。前 ${focusCount} 张图是标注区域的放大裁剪图（标注笔迹已画在图上），这是回答的主要依据：`,
+      '1. 先用一两句话说明你在标注处看到的具体内容（原文、公式或图示）；',
+      '2. 再只围绕这一处回答问题，必要时才引用整页其他内容作为上下文；',
+      '3. 不要概述整页，不要逐条讲解未被标注的内容。',
+    )
+    if (focusCount > 1) lines.push('有多个标注区域时，按图片顺序分别对应；若问题没有指明，就逐个回答并标明对应哪一处。')
+  } else if (markedPage) {
+    lines.push('', '【回答要求】随附的整页图片上已画出学生的标注（红色圈画/黄色高亮）。学生的问题针对标注处：先说明标注处的具体内容，再只围绕它回答，不要概述整页。')
+  } else if (hasOverlay || annotationText) {
+    lines.push('', '请结合随附的课件页面图片回答；学生标注了区域（见上方位置描述，若随附标注层图片，它与页面同尺寸、透明背景），请先找到标注处并只围绕它回答。')
+  } else {
+    lines.push('', '请结合随附的课件页面图片回答。')
+  }
   return lines.join('\n')
+}
+
+/** Caption placed right before each attached image in a page-chat message. */
+export function describePageChatImage(image, index) {
+  const n = index + 1
+  const item = isRecord(image) ? image : {}
+  if (item.kind === 'focus') {
+    const box = isRecord(item.box) ? item.box : null
+    const where = box
+      ? `（位于整页横向 ${Math.round(box.x0 * 100)}%–${Math.round(box.x1 * 100)}%，纵向 ${Math.round(box.y0 * 100)}%–${Math.round(box.y1 * 100)}%）`
+      : ''
+    return `图片 ${n}：学生标注区域放大图${where}，重点看这里。`
+  }
+  if (item.kind === 'overlay') return `图片 ${n}：学生标注层（透明背景，与整页图片同尺寸）。`
+  if (item.marked) return `图片 ${n}：整页课件，已叠加学生标注，作为上下文。`
+  return `图片 ${n}：整页课件。`
 }
 
 function cleanPage(value) {
@@ -474,7 +523,7 @@ export function summaryToCards(summary, meta = {}) {
 // ---------------------------------------------------------------------------
 
 export const BOARD_CHAT_SYSTEM =
-  '你是学生的私人学习教练。学生在知识看板上选中了一个知识点向你提问。回答要紧扣这个知识点在知识树中的位置（上级、下级、同级），先直接回答，再给依据；有课件页面时以课件为准，不编造课件里没有的结论。用中文，条理清楚，适合期末复习。'
+  '你是学生的私人学习教练。学生在知识看板上选中了一个知识点向你提问。回答要紧扣这个知识点在知识树中的位置（上级、下级、同级），先直接回答，再给依据；有课件页面时以课件为准，不编造课件里没有的结论。用中文，条理清楚，适合期末复习。可以使用 Markdown；数学公式一律写成 LaTeX：行内用 \\( … \\)，单独成行的公式用 $$ … $$。'
 
 function labelList(value, max) {
   return list(value).map((item) => text(item, 60)).filter(Boolean).slice(0, max)

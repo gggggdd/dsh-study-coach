@@ -15,9 +15,10 @@
  */
 
 import { createRequire } from 'node:module'
-import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
+import { chmod, mkdir, readFile, readdir, rename, rmdir, stat, unlink, writeFile } from 'node:fs/promises'
+import { randomUUID } from 'node:crypto'
 import { homedir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import * as ykt from './ykt.js'
 import * as ai from './ai.js'
 
@@ -32,6 +33,11 @@ const MAX_BACK = 8_000
 const MAX_SUMMARY_SLIDES = 240
 const SLIDES_PER_BATCH = 6
 const MAX_SUMMARY_CACHE = 60
+// Saved slide/board chats are text only and bounded so the file stays small.
+const MAX_CHAT_LESSONS = 30
+const MAX_CHAT_THREADS_PER_LESSON = 60
+const MAX_CHAT_MESSAGES_PER_THREAD = 30
+const MAX_CHAT_MESSAGE_CHARS = 6_000
 // Batches read in parallel; lowered automatically when the provider throttles.
 const SUMMARY_READ_CONCURRENCY = 3
 // Simultaneous slide downloads (current batches + the prefetched next ones).
@@ -614,6 +620,8 @@ export function apply(ctx, config) {
           continue
         }
         const ref = await attachments.saveImage({ data: bytes, mediaType, name: `ykt-slide-${slide.index}` })
+        // The conversation keeps this ref: never let a plugin lease delete it.
+        retainImage(ref)
         images.push(ref)
       } catch (error) {
         skipped.push(`第 ${slide.index} 页（${(error && error.message) || error}）`)
@@ -627,7 +635,13 @@ export function apply(ctx, config) {
   // AI study engine: user-selected model, whole-lesson summaries, page chat
   // -------------------------------------------------------------------------
   const modelCatalogCache = { at: 0, data: null }
-  const slideAttachmentCache = new Map()
+  // Downloaded slide bytes (memory only) so repeated questions on one page do
+  // not refetch the CDN; attachments themselves are created per call and
+  // deleted when the call ends (see createImageLease).
+  const slideBytesCache = new Map()
+  const leasedImages = new Map()
+  const retainedImagePaths = new Set()
+  const slideDataUrlCache = new Map()
   const summaryJobs = new Map()
   let summaryCachePromise = null
   let summaryWriteQueue = Promise.resolve()
@@ -640,31 +654,14 @@ export function apply(ctx, config) {
    * own for panel-initiated calls, so reuse a live session id when one exists
    * and otherwise use a stable plugin-local id.
    */
+  /**
+   * Session key for the plugin's own model calls (routing / prompt-cache
+   * header only). It is a plugin-private id, never one of the user's DSH
+   * conversation sessions, so these calls are not attributed to — or logged
+   * under — a real conversation.
+   */
   function aiSessionId() {
-    if (aiSessionIdCache) return aiSessionIdCache
-    try {
-      const sessions = ctx.get('sessions')
-      const list = sessions && typeof sessions.list === 'function' ? sessions.list() : []
-      const last = list[list.length - 1]
-      if (last && last.id) {
-        aiSessionIdCache = String(last.id)
-        return aiSessionIdCache
-      }
-    } catch {
-      /* fall through */
-    }
-    try {
-      const agents = ctx.get('agents')
-      const current = agents && typeof agents.currentInitiator === 'function' ? agents.currentInitiator() : null
-      const id = current && current.session && current.session.id
-      if (id) {
-        aiSessionIdCache = String(id)
-        return aiSessionIdCache
-      }
-    } catch {
-      /* fall through */
-    }
-    aiSessionIdCache = `study-coach-ai-${process.pid}`
+    if (!aiSessionIdCache) aiSessionIdCache = `dsh-study-coach-${randomUUID()}`
     return aiSessionIdCache
   }
 
@@ -845,13 +842,12 @@ export function apply(ctx, config) {
     }
   }
 
-  async function saveSlideAttachment(presentationId, slide, signal, scopeKey) {
-    const key = `${scopeKey || yktScopeKey()}||${presentationId}:${slide.index}`
-    if (slideAttachmentCache.has(key)) return slideAttachmentCache.get(key)
-    const attachments = ctx.get('attachments')
-    if (!attachments || typeof attachments.saveImage !== 'function') {
-      throw new ai.AiError('当前宿主没有图片附件服务，无法让 AI 阅读课件图片。')
-    }
+  /**
+   * Download one slide image from the Yuketang CDN (allow-listed host only).
+   * Shared by the attachment path and the local `slide-image` route the
+   * viewer uses to composite annotations onto the page.
+   */
+  async function fetchSlideImage(slide, signal, maxBytes) {
     const url = ykt.slideImageUrl(slide.cover)
     if (!url) throw new ykt.YktError(`第 ${slide.index} 页没有可读取的图片`)
     if (!ykt.isAllowedSlideUrl(url)) throw new ykt.YktError(`第 ${slide.index} 页图片地址不在雨课堂域名下，已拒绝`)
@@ -862,49 +858,188 @@ export function apply(ctx, config) {
       throw new ai.AiError(`第 ${slide.index} 页图片下载失败：${(error && error.message) || String(error)}`, { code: 'IMAGE_FETCH' })
     }
     if (!response.ok) throw new ai.AiError(`第 ${slide.index} 页图片下载失败（HTTP ${response.status}）`, { code: 'IMAGE_FETCH' })
-    const limits = attachments.imageLimits || {}
     const declaredLength = Number(response.headers && response.headers.get ? response.headers.get('content-length') : 0)
-    if (limits.maxImageBytes && declaredLength && declaredLength > limits.maxImageBytes) {
-      throw new ai.AiError(`第 ${slide.index} 页图片超过大小上限`)
-    }
+    if (maxBytes && declaredLength && declaredLength > maxBytes) throw new ai.AiError(`第 ${slide.index} 页图片超过大小上限`)
     const bytes = new Uint8Array(await response.arrayBuffer())
-    if (limits.maxImageBytes && bytes.byteLength > limits.maxImageBytes) {
-      throw new ai.AiError(`第 ${slide.index} 页图片超过大小上限`)
-    }
+    if (maxBytes && bytes.byteLength > maxBytes) throw new ai.AiError(`第 ${slide.index} 页图片超过大小上限`)
     if (!bytes.byteLength) throw new ai.AiError(`第 ${slide.index} 页图片为空`, { code: 'IMAGE_FETCH' })
     const mediaType = detectImageMediaType(response.headers && response.headers.get ? response.headers.get('content-type') : '', bytes)
     if (!mediaType) {
       throw new ai.AiError(`第 ${slide.index} 页图片格式不受支持（仅支持 PNG/JPEG/WebP/GIF）`, { code: 'IMAGE_FORMAT' })
     }
-    let ref
+    return { bytes, mediaType }
+  }
+
+  async function slideBytes(slide, signal, maxBytes) {
+    const key = String(slide.cover || '')
+    if (key && slideBytesCache.has(key)) {
+      const hit = slideBytesCache.get(key)
+      slideBytesCache.delete(key)
+      slideBytesCache.set(key, hit)
+      return hit
+    }
+    const fetched = await fetchSlideImage(slide, signal, maxBytes)
+    if (key) {
+      slideBytesCache.set(key, fetched)
+      while (slideBytesCache.size > 24) slideBytesCache.delete(slideBytesCache.keys().next().value)
+    }
+    return fetched
+  }
+
+  async function saveSlideAttachment(presentationId, slide, signal, lease) {
+    const attachments = ctx.get('attachments')
+    if (!attachments || typeof attachments.saveImage !== 'function') {
+      throw new ai.AiError('当前宿主没有图片附件服务，无法让 AI 阅读课件图片。')
+    }
+    const limits = attachments.imageLimits || {}
+    const { bytes, mediaType } = await slideBytes(slide, signal, limits.maxImageBytes)
     try {
-      ref = await attachments.saveImage({
-        data: bytes,
-        mediaType,
-        name: `ykt-slide-${presentationId}-${slide.index}`,
-      })
+      const save = () => attachments.saveImage({ data: bytes, mediaType, name: `ykt-slide-${presentationId}-${slide.index}` })
+      return lease ? await lease.track(save) : await save()
     } catch (error) {
       const code = (error && error.code) || ''
       throw new ai.AiError(`第 ${slide.index} 页图片无法保存为附件：${(error && error.message) || String(error)}${code ? `（${code}）` : ''}`, { code: code || 'ATTACHMENT_FAILED' })
     }
-    slideAttachmentCache.set(key, ref)
-    if (slideAttachmentCache.size > 400) {
-      const oldest = slideAttachmentCache.keys().next().value
-      if (oldest !== undefined) slideAttachmentCache.delete(oldest)
-    }
-    return ref
   }
 
-  async function saveDataUrlImage(value) {
+  // ---- Use-and-delete image leases ------------------------------------------
+  // The host attachment store is content-addressed and has no delete API, but
+  // it exposes each object's path. A lease records the objects a single model
+  // call created; when the call ends they are removed again, together with the
+  // provider-sized copies the host cached for that request. Objects that
+  // already existed (e.g. the same image in a chat), that another in-flight
+  // call still uses, or that the ykt tool handed to the conversation are kept.
+  function imagePathOf(ref) {
+    try {
+      const store = ctx.get('attachments')
+      return ref && store && typeof store.imageHostPath === 'function' ? String(store.imageHostPath(ref) || '') : ''
+    } catch {
+      return ''
+    }
+  }
+
+  function retainImage(ref) {
+    const path = imagePathOf(ref)
+    if (!path) return
+    retainedImagePaths.add(path)
+    if (retainedImagePaths.size > 4000) retainedImagePaths.delete(retainedImagePaths.values().next().value)
+  }
+
+  async function removeStoredFile(path) {
+    try { await chmod(path, 0o644) } catch { /* may already be writable or gone */ }
+    try {
+      await unlink(path)
+    } catch {
+      return
+    }
+    try { await rmdir(dirname(path)) } catch { /* shard directory still in use */ }
+  }
+
+  function requestImageCacheRoot() {
+    const store = ctx.get('attachments')
+    if (!store) return ''
+    if (typeof store.cacheRoot === 'string' && store.cacheRoot) return join(store.cacheRoot, 'request-images')
+    if (typeof store.root === 'string' && store.root) return join(dirname(dirname(store.root)), 'cache', 'attachments', 'request-images')
+    return ''
+  }
+
+  /** Drop provider-sized request copies written since `since` (a pure cache). */
+  async function sweepRequestImageCache(since) {
+    const root = requestImageCacheRoot()
+    if (!root) return
+    let shards = []
+    try { shards = await readdir(root) } catch { return }
+    for (const shard of shards) {
+      const dir = join(root, shard)
+      let names = []
+      try { names = await readdir(dir) } catch { continue }
+      for (const name of names) {
+        const file = join(dir, name)
+        try {
+          const info = await stat(file)
+          if (info.isFile() && info.mtimeMs >= since - 2000) await removeStoredFile(file)
+        } catch { /* raced with another sweep */ }
+      }
+    }
+  }
+
+  function releaseLeasedPath(path) {
+    const entry = leasedImages.get(path)
+    if (!entry) return null
+    entry.uses -= 1
+    if (entry.uses > 0) return null
+    leasedImages.delete(path)
+    if (!entry.created || retainedImagePaths.has(path)) return null
+    return removeStoredFile(path)
+  }
+
+  function createImageLease() {
+    const startedAt = Date.now()
+    const paths = []
+    let released = false
+    return {
+      async track(save) {
+        const before = Date.now()
+        const ref = await save()
+        const path = imagePathOf(ref)
+        if (!path) return ref
+        let created = false
+        try {
+          const info = await stat(path)
+          const born = Number(info.birthtimeMs) > 0 ? Number(info.birthtimeMs) : Number(info.ctimeMs)
+          created = born >= before - 1500
+        } catch {
+          created = false
+        }
+        const entry = leasedImages.get(path) || { uses: 0, created: false }
+        entry.uses += 1
+        if (created) entry.created = true
+        leasedImages.set(path, entry)
+        if (released) await releaseLeasedPath(path)
+        else paths.push(path)
+        return ref
+      },
+      async release() {
+        if (released) return
+        released = true
+        const pending = paths.splice(0).map(releaseLeasedPath).filter(Boolean)
+        await Promise.all(pending)
+        await sweepRequestImageCache(startedAt).catch(() => {})
+      },
+    }
+  }
+
+  async function saveDataUrlImage(value, name, lease) {
     const match = /^data:(image\/(?:png|jpeg|webp));base64,([A-Za-z0-9+/=\s]+)$/.exec(String(value || ''))
     if (!match) return null
     const attachments = ctx.get('attachments')
     if (!attachments || typeof attachments.saveImage !== 'function') return null
     const limits = attachments.imageLimits || {}
-    if (Number(limits.maxImagesPerMessage) === 1) return null
     const bytes = new Uint8Array(Buffer.from(match[2], 'base64'))
-    if (!bytes.byteLength || bytes.byteLength > 4 * 1024 * 1024) return null
-    return attachments.saveImage({ data: bytes, mediaType: match[1], name: 'ykt-annotation' })
+    const maxBytes = Math.min(4 * 1024 * 1024, Number(limits.maxImageBytes) || Infinity)
+    if (!bytes.byteLength || bytes.byteLength > maxBytes) return null
+    const save = () => attachments.saveImage({ data: bytes, mediaType: match[1], name: name || 'ykt-annotation' })
+    return lease ? lease.track(save) : save()
+  }
+
+  /** Per-message image budget the host allows (defaults to a generous 8). */
+  function imageBudget() {
+    const attachments = ctx.get('attachments')
+    const limits = (attachments && attachments.imageLimits) || {}
+    const max = Number(limits.maxImagesPerMessage)
+    return Number.isFinite(max) && max > 0 ? Math.floor(max) : 8
+  }
+
+  /** Normalise a client-sent focus region box into 0–1 page coordinates. */
+  function cleanFocusBox(box) {
+    if (!isRecord(box)) return null
+    const clamp = (value) => Math.max(0, Math.min(1, Number(value) || 0))
+    const x0 = clamp(box.x0)
+    const y0 = clamp(box.y0)
+    const x1 = clamp(box.x1)
+    const y1 = clamp(box.y1)
+    if (x1 <= x0 || y1 <= y0) return null
+    return { x0, y0, x1, y1 }
   }
 
   function summaryDataDir() {
@@ -947,6 +1082,107 @@ export function apply(ctx, config) {
     return write
   }
 
+  // ---- Saved chats (text only) ----------------------------------------------
+  let chatCachePromise = null
+  let chatWriteQueue = Promise.resolve()
+
+  async function loadChatStore() {
+    if (chatCachePromise) return chatCachePromise
+    chatCachePromise = (async () => {
+      try {
+        const raw = await readFile(join(summaryDataDir(), 'chats.json'), 'utf8')
+        const parsed = JSON.parse(raw)
+        return isRecord(parsed) && isRecord(parsed.lessons) ? parsed.lessons : {}
+      } catch {
+        return {}
+      }
+    })()
+    return chatCachePromise
+  }
+
+  function saveChatStore(lessons) {
+    const entries = Object.entries(lessons)
+      .sort((left, right) => (Number(right[1] && right[1].updatedAt) || 0) - (Number(left[1] && left[1].updatedAt) || 0))
+      .slice(0, MAX_CHAT_LESSONS)
+    for (const key of Object.keys(lessons)) delete lessons[key]
+    for (const [key, value] of entries) lessons[key] = value
+    const write = chatWriteQueue.then(async () => {
+      const dir = summaryDataDir()
+      await mkdir(dir, { recursive: true })
+      const file = join(dir, 'chats.json')
+      if (!entries.length) {
+        try { await unlink(file) } catch { /* nothing saved */ }
+        return
+      }
+      const temp = `${file}.${process.pid}.${Math.random().toString(36).slice(2, 8)}.tmp`
+      await writeFile(temp, JSON.stringify({ version: 1, lessons: Object.fromEntries(entries) }), { encoding: 'utf8', mode: 0o600 })
+      await rename(temp, file)
+    })
+    chatWriteQueue = write.catch(() => {})
+    return write
+  }
+
+  function cleanChatMessages(value) {
+    return (Array.isArray(value) ? value : [])
+      .filter((item) => isRecord(item) && (item.role === 'user' || item.role === 'assistant'))
+      .map((item) => ({ role: item.role, text: clampText(item.text, MAX_CHAT_MESSAGE_CHARS) }))
+      .filter((item) => item.text)
+      .slice(-MAX_CHAT_MESSAGES_PER_THREAD)
+  }
+
+  async function loadLessonChats(lessonId) {
+    const lessons = await loadChatStore()
+    const entry = lessons[scopedLessonKey(lessonId)]
+    const pick = (threads) => {
+      const out = {}
+      if (!isRecord(threads)) return out
+      for (const [key, thread] of Object.entries(threads)) {
+        const messages = cleanChatMessages(thread && thread.messages)
+        if (messages.length) out[key] = messages
+      }
+      return out
+    }
+    return { page: pick(entry && entry.page), board: pick(entry && entry.board) }
+  }
+
+  async function saveLessonChat(lessonId, kind, threadKey, messages) {
+    if (kind !== 'page' && kind !== 'board') throw new ykt.YktError('chats/save 的 kind 只能是 page 或 board')
+    const key = clampText(threadKey, 200)
+    if (!key) throw new ykt.YktError('chats/save 需要 key')
+    const lessons = await loadChatStore()
+    const lessonKey = scopedLessonKey(lessonId)
+    const entry = isRecord(lessons[lessonKey]) ? lessons[lessonKey] : { page: {}, board: {} }
+    if (!isRecord(entry[kind])) entry[kind] = {}
+    const clean = cleanChatMessages(messages)
+    if (clean.length) entry[kind][key] = { messages: clean, updatedAt: Date.now() }
+    else delete entry[kind][key]
+    for (const group of ['page', 'board']) {
+      if (!isRecord(entry[group])) entry[group] = {}
+      const threads = Object.entries(entry[group])
+        .sort((left, right) => (Number(right[1] && right[1].updatedAt) || 0) - (Number(left[1] && left[1].updatedAt) || 0))
+        .slice(0, MAX_CHAT_THREADS_PER_LESSON)
+      entry[group] = Object.fromEntries(threads)
+    }
+    if (Object.keys(entry.page).length || Object.keys(entry.board).length) {
+      entry.updatedAt = Date.now()
+      lessons[lessonKey] = entry
+    } else {
+      delete lessons[lessonKey]
+    }
+    await saveChatStore(lessons)
+  }
+
+  async function clearChats(lessonId, scope) {
+    const lessons = await loadChatStore()
+    if (lessonId) delete lessons[scopedLessonKey(lessonId)]
+    else {
+      for (const key of Object.keys(lessons)) {
+        if (key.indexOf(`${scope || yktScopeKey()}||`) === 0) delete lessons[key]
+      }
+    }
+    await saveChatStore(lessons)
+  }
+
   async function getCachedSummary(lessonId) {
     const cache = await loadSummaryCache()
     return cache[scopedLessonKey(lessonId)] || null
@@ -958,9 +1194,7 @@ export function apply(ctx, config) {
       try { job.controller.abort() } catch { /* already done */ }
       summaryJobs.delete(key)
     }
-    for (const key of [...slideAttachmentCache.keys()]) {
-      if (key.indexOf(`${scope}||`) === 0) slideAttachmentCache.delete(key)
-    }
+    slideBytesCache.clear()
     const cache = await loadSummaryCache()
     let changed = false
     for (const key of Object.keys(cache)) {
@@ -969,6 +1203,7 @@ export function apply(ctx, config) {
       changed = true
     }
     if (changed) await saveSummaryCache(cache)
+    await clearChats('', scope)
   }
 
   function publicJob(job) {
@@ -979,6 +1214,7 @@ export function apply(ctx, config) {
       message: job.message,
       progress: Math.max(0, Math.min(1, Number(job.progress) || 0)),
       totalSlides: Number(job.totalSlides) || 0,
+      excludedSlides: Number(job.excludedSlides) || 0,
       readSlides: Number(job.readSlides) || 0,
       title: job.title || '',
       courseName: job.courseName || '',
@@ -1152,6 +1388,23 @@ export function apply(ctx, config) {
     }
   }
 
+  /**
+   * Normalise the client's unticked pages, `{ [presentationId]: [pageIndex] }`,
+   * into a Set of "presentationId:index" keys.
+   */
+  function summaryExclusions(value) {
+    const keys = new Set()
+    if (!isRecord(value)) return keys
+    for (const presentationId of Object.keys(value).slice(0, 50)) {
+      const pages = Array.isArray(value[presentationId]) ? value[presentationId] : []
+      for (const page of pages.slice(0, 2000)) {
+        const index = Number(page)
+        if (Number.isInteger(index) && index > 0) keys.add(`${String(presentationId)}:${index}`)
+      }
+    }
+    return keys
+  }
+
   async function runSummaryJob(job, input) {
     const signal = job.controller.signal
     let treeGrower = null
@@ -1176,9 +1429,18 @@ export function apply(ctx, config) {
       const declaredSlideCount = lessonSummary.presentations.reduce((total, item) => total + (Number(item.slidesCount) || 0), 0)
       updateJob(job, { phase: 'prepare', progress: 0.05, message: '收集全部课件页面…' })
       const collected = await collectLessonSlides(client, job.lessonId, info, lessonSummary, signal)
-      const slides = collected.slides
+      // Pages the student unticked in the panel never reach the model.
+      const exclude = summaryExclusions(input && input.exclude)
+      const slides = exclude.size
+        ? collected.slides.filter((item) => !exclude.has(`${item.presentationId}:${Number(item.slide && item.slide.index)}`))
+        : collected.slides
+      const excludedCount = collected.slides.length - slides.length
+      job.excludedSlides = excludedCount
       job.warnings = collected.warnings
       job.totalSlides = slides.length
+      if (!slides.length && excludedCount) {
+        throw new ai.AiError('所有课件页都被取消勾选了，请至少勾选一页再总结。', { code: 'NO_SLIDES_SELECTED' })
+      }
       if (!slides.length) {
         throw new ai.AiError(
           '该课时没有可读取的课件页面，无法生成总结。' +
@@ -1237,14 +1499,23 @@ export function apply(ctx, config) {
       // prefetching never floods the CDN.
       const fetchLimit = createLimiter(SLIDE_FETCH_CONCURRENCY)
       const prepared = new Map()
+      const batchLeases = new Map()
+      const releaseBatch = (batchIndex) => {
+        const lease = batchLeases.get(batchIndex)
+        if (!lease) return Promise.resolve()
+        batchLeases.delete(batchIndex)
+        return lease.release().catch(() => {})
+      }
       const prepareBatch = (batchIndex) => {
         if (batchIndex >= batches.length) return null
         if (prepared.has(batchIndex)) return prepared.get(batchIndex)
         const batch = batches[batchIndex]
+        const lease = createImageLease()
+        batchLeases.set(batchIndex, lease)
         const task = Promise.all(batch.map((item) => fetchLimit(async () => {
           if (readSignal.aborted) return { item, error: '已取消' }
           try {
-            return { item, ref: await saveSlideAttachment(item.presentationId, item.slide, readSignal, job.scopeKey) }
+            return { item, ref: await saveSlideAttachment(item.presentationId, item.slide, readSignal, lease) }
           } catch (error) {
             return { item, error: (error && error.message) || String(error) }
           }
@@ -1287,6 +1558,7 @@ export function apply(ctx, config) {
               from,
               to,
               total: presentationTotals.get(presentationId) || slides.length,
+              pages: batch.map((item) => Number(item.slide.index)),
             }),
           },
         ]
@@ -1353,6 +1625,9 @@ export function apply(ctx, config) {
             if (!fatal) fatal = error
             readController.abort()
             return
+          } finally {
+            // The batch's slide images are no longer needed once it is read.
+            await releaseBatch(batchIndex)
           }
         }
       }
@@ -1362,6 +1637,9 @@ export function apply(ctx, config) {
         await Promise.all(Array.from({ length: workerLimit }, (_, workerId) => worker(workerId)))
       } finally {
         signal.removeEventListener('abort', abortRead)
+        // Prefetched batches that were never read (cancel / failure).
+        await Promise.all([...prepared.values()].map((task) => task && task.catch(() => {})))
+        await Promise.all([...batchLeases.keys()].map(releaseBatch))
       }
       if (signal.aborted) throw new ai.AiError('模型调用已取消', { code: 'ABORTED' })
       if (fatal) throw fatal
@@ -1381,6 +1659,7 @@ export function apply(ctx, config) {
         lessonTitle: job.title,
         notes: notesText,
         totalSlides: slides.length,
+        excludedSlides: excludedCount,
         replayPages: context.replayPages,
         mindMapText: context.mindMapText,
         lectureNoteText: context.lectureNoteText,
@@ -1433,7 +1712,8 @@ export function apply(ctx, config) {
         slideCount: job.readSlides || slides.length,
         readSlideCount: job.readSlides || 0,
         declaredSlideCount: declaredSlideCount || slides.length,
-        truncated: declaredSlideCount > slides.length,
+        excludedSlideCount: excludedCount,
+        truncated: declaredSlideCount > slides.length + excludedCount,
         warnings: Array.isArray(job.warnings) ? job.warnings.slice(0, 10) : [],
         model: job.model,
         generatedAt: Date.now(),
@@ -1504,6 +1784,31 @@ export function apply(ctx, config) {
     return publicJob(job)
   }
 
+  /**
+   * Same-origin copy of one slide image for the viewer. The CDN image cannot be
+   * drawn onto a canvas and read back (cross-origin taint), so the viewer asks
+   * for this data URL when it needs to crop the circled region for the AI.
+   */
+  async function slideImageDataUrl(input) {
+    const lessonId = String(input.lessonId || '')
+    const presentationId = String(input.presentationId || '')
+    const slideIndex = Number(input.slideIndex) || 0
+    if (!lessonId || !presentationId || !slideIndex) throw new ykt.YktError('slide-image 需要 lessonId、presentationId 与 slideIndex')
+    const key = `${yktScopeKey()}||${presentationId}:${slideIndex}`
+    if (slideDataUrlCache.has(key)) return slideDataUrlCache.get(key)
+    const slides = await ykt.listSlides(await yktClient(), presentationId, lessonId)
+    const slide = slides.filter((item) => Number(item.index) === slideIndex)[0]
+    if (!slide) throw new ykt.YktError(`找不到第 ${slideIndex} 页`)
+    const { bytes, mediaType } = await fetchSlideImage(slide, undefined, 8 * 1024 * 1024)
+    const result = { dataUrl: `data:${mediaType};base64,${Buffer.from(bytes).toString('base64')}`, mediaType }
+    slideDataUrlCache.set(key, result)
+    if (slideDataUrlCache.size > 24) {
+      const oldest = slideDataUrlCache.keys().next().value
+      if (oldest !== undefined) slideDataUrlCache.delete(oldest)
+    }
+    return result
+  }
+
   async function pageChatAnswer(input) {
     const lessonId = String(input.lessonId || '')
     const presentationId = String(input.presentationId || '')
@@ -1524,8 +1829,57 @@ export function apply(ctx, config) {
     const slide = slides.filter((item) => Number(item.index) === slideIndex)[0] || slides[slideIndex - 1]
     if (!slide) throw new ykt.YktError(`找不到第 ${slideIndex} 页`)
     const pageIndex = Number(slide.index) || slideIndex
-    const imageRef = await saveSlideAttachment(presentationId, slide)
     const annotationText = clampText(input.annotationText, 2_000) || ai.describeAnnotations(input.annotations)
+
+    // Image plan. When the student circled/highlighted something, the client
+    // sends close-up crops of each marked region (page + strokes composited)
+    // and the whole page with the strokes burnt in. The crops go FIRST so the
+    // model reads the marked content at full resolution instead of skimming
+    // the whole slide; the full page follows only as context.
+    let budget = imageBudget()
+    const images = []
+    const lease = createImageLease()
+    try {
+    const focusList = (Array.isArray(input.focus) ? input.focus : []).filter(isRecord).slice(0, 3)
+    for (const item of focusList) {
+      if (budget <= 0) break
+      // Keep one slot for the page itself unless the host allows a single image.
+      if (images.length && budget <= 1) break
+      try {
+        const ref = await saveDataUrlImage(item.image, `ykt-focus-${presentationId}-${pageIndex}`, lease)
+        if (!ref) continue
+        images.push({ kind: 'focus', ref, box: cleanFocusBox(item.box) })
+        budget -= 1
+      } catch {
+        /* a failed crop only weakens focus; the page image still follows */
+      }
+    }
+    if (budget > 0) {
+      let pageRef = null
+      let marked = false
+      if (input.marked) {
+        try {
+          pageRef = await saveDataUrlImage(input.marked, `ykt-marked-${presentationId}-${pageIndex}`, lease)
+          marked = Boolean(pageRef)
+        } catch {
+          pageRef = null
+        }
+      }
+      if (!pageRef) pageRef = await saveSlideAttachment(presentationId, slide, undefined, lease)
+      images.push({ kind: 'page', ref: pageRef, marked })
+      budget -= 1
+      // Legacy clients: a transparent overlay is only useful next to an unmarked page.
+      if (!marked && input.overlay && budget > 0 && !images.some((image) => image.kind === 'focus')) {
+        try {
+          const overlayRef = await saveDataUrlImage(input.overlay, 'ykt-annotation', lease)
+          if (overlayRef) images.push({ kind: 'overlay', ref: overlayRef })
+        } catch {
+          /* annotation overlay is optional */
+        }
+      }
+    }
+    if (!images.length) images.push({ kind: 'page', ref: await saveSlideAttachment(presentationId, slide, undefined, lease), marked: false })
+
     const content = [
       {
         type: 'text',
@@ -1537,21 +1891,14 @@ export function apply(ctx, config) {
           question,
           annotationText,
           history: input.history,
+          images: images.map((image) => ({ kind: image.kind, box: image.box || null, marked: Boolean(image.marked) })),
         }),
       },
-      { type: 'image', attachment: imageRef },
     ]
-    if (input.overlay) {
-      try {
-        const overlayRef = await saveDataUrlImage(input.overlay)
-        if (overlayRef) {
-          content.push({ type: 'text', text: '随附图片 2 是学生标注层（透明背景，与图片 1 同尺寸）。' })
-          content.push({ type: 'image', attachment: overlayRef })
-        }
-      } catch {
-        /* annotation overlay is optional */
-      }
-    }
+    images.forEach((image, index) => {
+      content.push({ type: 'text', text: ai.describePageChatImage(image, index) })
+      content.push({ type: 'image', attachment: image.ref })
+    })
     const answer = await ai.streamText(llm, selection, {
       system: ai.PAGE_CHAT_SYSTEM,
       sessionId: aiSessionId(),
@@ -1565,6 +1912,10 @@ export function apply(ctx, config) {
       model: selection,
       page: { index: pageIndex, count: slides.length },
       usage: answer.usage,
+    }
+    } finally {
+      // Crops, marked page and slide copy are deleted as soon as the answer is in.
+      await lease.release()
     }
   }
 
@@ -1585,6 +1936,8 @@ export function apply(ctx, config) {
     const selection = aiSelection()
 
     const images = []
+    const lease = createImageLease()
+    try {
     const lessonId = String(input.lessonId || '')
     const presentationId = String(input.presentationId || '')
     const pages = (Array.isArray(node.pages) ? node.pages : []).map(Number).filter((page) => Number.isInteger(page) && page > 0).slice(0, 3)
@@ -1603,7 +1956,7 @@ export function apply(ctx, config) {
             const slide = slides.filter((item) => Number(item.index) === page)[0]
             if (!slide) continue
             try {
-              images.push({ page, ref: await saveSlideAttachment(presentationId, slide) })
+              images.push({ page, ref: await saveSlideAttachment(presentationId, slide, undefined, lease) })
             } catch {
               /* a missing page image only weakens grounding */
             }
@@ -1645,6 +1998,9 @@ export function apply(ctx, config) {
       modelInfo: modelInfo || undefined,
     })
     return { answer: answer.text, model: selection, pages: images.map((image) => image.page) }
+    } finally {
+      await lease.release()
+    }
   }
 
   async function createSummaryCards(lessonId) {
@@ -2586,7 +2942,7 @@ export function apply(ctx, config) {
               })
             }
           }
-          const job = startSummaryJob({ lessonId })
+          const job = startSummaryJob({ lessonId, exclude: body.exclude })
           return sendJson(response, 200, { ok: true, data: { job } })
         }
         if (path === 'summary/status' && request.method === 'GET') {
@@ -2641,6 +2997,29 @@ export function apply(ctx, config) {
           const result = await createSummaryCards(lessonId)
           return sendJson(response, 200, { ok: true, data: result })
         }
+        if (path === 'chats/load' && request.method === 'POST') {
+          const body = await readJson(request)
+          const lessonId = String(body.lessonId || '')
+          if (!lessonId) throw new ykt.YktError('缺少 lessonId')
+          return sendJson(response, 200, { ok: true, data: await loadLessonChats(lessonId) })
+        }
+        if (path === 'chats/save' && request.method === 'POST') {
+          const body = await readJson(request)
+          const lessonId = String(body.lessonId || '')
+          if (!lessonId) throw new ykt.YktError('缺少 lessonId')
+          await saveLessonChat(lessonId, String(body.kind || ''), body.key, body.messages)
+          return sendJson(response, 200, { ok: true, data: { saved: true } })
+        }
+        if (path === 'chats/clear' && request.method === 'POST') {
+          const body = await readJson(request)
+          await clearChats(String(body.lessonId || ''))
+          return sendJson(response, 200, { ok: true, data: { cleared: true } })
+        }
+        if (path === 'slide-image' && request.method === 'POST') {
+          const body = await readJson(request)
+          const result = await slideImageDataUrl(body)
+          return sendJson(response, 200, { ok: true, data: result })
+        }
         if (path === 'page-chat' && request.method === 'POST') {
           const body = await readJson(request)
           const result = await pageChatAnswer(body)
@@ -2659,7 +3038,7 @@ export function apply(ctx, config) {
         })
       }
     }
-    const routes = ['status', 'qr', 'qr/poll', 'login', 'logout', 'courses', 'activities', 'lesson', 'slides', 'progress', 'mindmap', 'models', 'model', 'summary/start', 'summary/status', 'summary/cancel', 'summary/cards', 'page-chat', 'board-chat']
+    const routes = ['status', 'qr', 'qr/poll', 'login', 'logout', 'courses', 'activities', 'lesson', 'slides', 'progress', 'mindmap', 'models', 'model', 'summary/start', 'summary/status', 'summary/cancel', 'summary/cards', 'slide-image', 'page-chat', 'board-chat', 'chats/load', 'chats/save', 'chats/clear']
     registeredRouteCount = routes.length
     const disposers = routes.map((name) => webServer.register({
       kind: 'exact',

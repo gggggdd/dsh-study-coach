@@ -328,6 +328,50 @@ const qrSvg = test.renderQrSvg('https://www.yuketang.cn/api/v3/user/login/app-we
 assert.match(qrSvg, /^<svg/)
 assert.ok(qrSvg.length > 1000, 'QR SVG generated')
 
+// Rich answers: TeX becomes MathML, Markdown becomes elements.
+const sinFormula = test.texToMathML('P_k(2j) = \\sin\\left(\\frac{k}{10000^{\\frac{2j}{d}}}\\right)', false)
+assert.match(sinFormula, /^<math>/)
+assert.match(sinFormula, /<msub><mi>P<\/mi><mrow><mi>k<\/mi><\/mrow><\/msub>/)
+assert.match(sinFormula, /<mi mathvariant="normal">sin<\/mi>/)
+assert.match(sinFormula, /<mfrac><mrow><mi>k<\/mi><\/mrow><mrow><msup><mn>10000<\/mn><mrow><mfrac>/)
+assert.match(sinFormula, /<mo stretchy="true">\(<\/mo>/)
+assert.match(test.texToMathML('\\sum_{i=1}^{n} x_i', true), /<math display="block"><mrow><munderover><mo largeop="true">∑<\/mo>/)
+assert.match(test.texToMathML('j \\in [0, d/2-1]', false), /<mo>∈<\/mo>/)
+assert.match(test.texToMathML('\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}', true), /<mtable><mtr><mtd>/)
+assert.match(test.texToMathML('\\text{a<b}', false), /<mtext>a&lt;b<\/mtext>/, 'text is escaped')
+assert.match(test.texToMathML('\\unknowncmd x', false), /<mtext>\\unknowncmd<\/mtext>/, 'unknown commands degrade to text')
+
+const sample = [
+  '你圈画标注的地方是 **正余弦公式**：',
+  '*   **公式1（偶数维度）**：\\(P_k(2j) = \\sin\\left(\\frac{k}{10000^{\\frac{2j}{d}}}\\right)\\)',
+  '*   **下方定义**：\\(k\\) 是位置',
+  '',
+  '### 1. 核心作用',
+  '最核心的巧妙在分母里的 **\\(10000^{\\frac{2j}{d}}\\)**：',
+  '$$X = X + P$$',
+  '| 维度 | 函数 |',
+  '| --- | --- |',
+  '| 偶数 | $\\sin$ |',
+].join('\n')
+const rich = test.renderRich(sample, 'm')
+const flatten = (node, out = []) => {
+  if (Array.isArray(node)) { node.forEach((child) => flatten(child, out)); return out }
+  if (node && typeof node === 'object') {
+    out.push(node)
+    if (node.props) flatten(node.props.children, out)
+  }
+  return out
+}
+const nodes = flatten(rich)
+const maths = nodes.filter((node) => node.props && node.props.className && /sc-math/.test(node.props.className))
+assert.ok(maths.length >= 5, 'all formulas render as MathML: ' + maths.length)
+assert.ok(maths.every((node) => /^<math/.test(node.props.dangerouslySetInnerHTML.__html)))
+assert.ok(maths.some((node) => /sc-math-block/.test(node.props.className)), 'display math is a block')
+assert.ok(nodes.some((node) => node.type === 'ul'), 'bullets become a list')
+assert.ok(nodes.some((node) => node.props && node.props.role === 'heading'), '### becomes a heading')
+assert.ok(nodes.some((node) => node.type === 'strong' && flatten(node.props.children).some((child) => child.props && /sc-math/.test(child.props.className || ''))), 'math inside bold renders')
+assert.ok(nodes.some((node) => node.type === 'table'), 'pipe tables render')
+
 // eslint-disable-next-line no-console
 console.log('client.smoke.mjs — all render assertions passed')
 process.exit(0)
