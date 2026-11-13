@@ -415,9 +415,9 @@ function vget(ref, fallback) {
 
 const STUDY_SECTION = `# Study deck and Yuketang
 
-The \`study\` tool owns the learner's spaced-repetition deck shown in the 学习中心 / Learning Coach panel. When the user learns something worth keeping, turn the explanation into atomic flashcards with it; when they ask to review or be tested, fetch the due queue, ask one question at a time, reveal the answer, explain any gap, and record the grade. Teach for retention rather than coverage, never grade without an answer, and never invent progress numbers.
+The \`study\` tool owns the learner's spaced-repetition deck shown in the 学习中心 / Learning Coach panel. When the user learns something worth keeping, turn the explanation into a small number of focused flashcards — one card per coherent concept or tightly related Q&A cluster, not one card per sentence or per answer. If a new point extends an existing card in the same deck, merge it into that card (or update it) instead of adding a near-duplicate. When they ask to review or be tested, fetch the due queue, ask one question at a time, reveal the answer, explain any gap, and record the grade. Teach for retention rather than coverage, never grade without an answer, and never invent progress numbers.
 
-The \`ykt\` tool reads the user's own 雨课堂 (Yuketang) courses and courseware. When the user mentions 雨课堂、课程、课件、学习计划 or 考点, use it: \`status\` → \`courses\` → \`activities\` → \`lesson\` → \`slides\` (with \`attach: true\` to read slides as images) → \`progress\` / \`mind_map\`. The 雨课堂 tab in the panel handles login with a sessionid; never ask the user to paste it into chat and never print it. This tool is read-only: never check in, answer questions, or submit anything. After reading courseware, produce a dated study plan and a prioritized 考点清单, then turn the key points into atomic \`study\` cards.
+The \`ykt\` tool reads the user's own 雨课堂 (Yuketang) courses and courseware. When the user mentions 雨课堂、课程、课件、学习计划 or 考点, use it: \`status\` → \`courses\` → \`activities\` → \`lesson\` → \`slides\` (with \`attach: true\` to read slides as images) → \`progress\` / \`mind_map\`. The 雨课堂 tab in the panel handles login with a sessionid; never ask the user to paste it into chat and never print it. This tool is read-only: never check in, answer questions, or submit anything. After reading courseware, produce a dated study plan and a prioritized 考点清单, then turn the key points into a small set of focused \`study\` cards (combine related points into the same card rather than one card per point).
 
 The 雨课堂 panel also has its own one-click "AI 总结" that reads every slide of a lesson with the user's selected model, and a fullscreen slide viewer with per-page AI chat and pen/highlighter annotations. Those actions run locally through the plugin; do not duplicate a summary that already exists in the panel unless the user asks for a fresh analysis.`
 
@@ -1431,9 +1431,12 @@ export function apply(ctx, config) {
       const collected = await collectLessonSlides(client, job.lessonId, info, lessonSummary, signal)
       // Pages the student unticked in the panel never reach the model.
       const exclude = summaryExclusions(input && input.exclude)
-      const slides = exclude.size
+      let slides = exclude.size
         ? collected.slides.filter((item) => !exclude.has(`${item.presentationId}:${Number(item.slide && item.slide.index)}`))
         : collected.slides
+      if (Number(job.maxSlides) > 0) {
+        slides = slides.slice(0, Math.max(1, Math.min(MAX_SUMMARY_SLIDES, Math.floor(Number(job.maxSlides)))))
+      }
       const excludedCount = collected.slides.length - slides.length
       job.excludedSlides = excludedCount
       job.warnings = collected.warnings
@@ -2086,9 +2089,9 @@ export function apply(ctx, config) {
       properties: {
         action: {
           type: 'string',
-          enum: ['add', 'due', 'grade', 'stats', 'list', 'update', 'delete', 'reset_stats'],
+          enum: ['add', 'due', 'grade', 'stats', 'list', 'update', 'merge', 'delete', 'reset_stats'],
           description:
-            'add = create cards; due = fetch cards due for review (quiz queue); grade = record one review result; stats = learning statistics; list = search/browse cards; update = edit one card; delete = remove cards; reset_stats = clear review history and streak while keeping every card (only when the user explicitly asks).',
+            'add = create cards (consolidate related points into one card); due = fetch cards due for review (quiz queue); grade = record one review result; stats = learning statistics; list = search/browse cards; update = edit one card; merge = combine 2+ related cards into one (cardIds, optional front/back); delete = remove cards; reset_stats = clear review history and streak while keeping every card (only when the user explicitly asks).',
         },
         cards: {
           type: 'array',
@@ -2108,18 +2111,18 @@ export function apply(ctx, config) {
           },
         },
         cardId: { type: 'string', description: 'For `grade` / `update`: the card id.' },
-        cardIds: { type: 'array', items: { type: 'string' }, description: 'For `delete`: card ids to remove.' },
+        cardIds: { type: 'array', items: { type: 'string' }, description: 'For `delete` / `merge`: card ids. `merge` combines 2+ related cards into one.' },
         grade: {
           type: 'string',
           enum: ['again', 'hard', 'good', 'easy'],
           description: 'For `grade`: how well the learner recalled the card.',
         },
-        deck: { type: 'string', description: 'Optional deck filter for `due` / `list`.' },
+        deck: { type: 'string', description: 'Optional deck filter for `due` / `list`; for `merge`, the merged deck.' },
         query: { type: 'string', description: 'For `list`: search text matched against front, back, and tags.' },
         limit: { type: 'number', description: 'For `due` / `list`: max cards to return (1–50).' },
-        front: { type: 'string', description: 'For `update`: new front text.' },
-        back: { type: 'string', description: 'For `update`: new back text.' },
-        tags: { type: 'array', items: { type: 'string' }, description: 'For `update`: replacement tags.' },
+        front: { type: 'string', description: 'For `update`: new front text; for `merge`: merged front (optional).' },
+        back: { type: 'string', description: 'For `update`: new back text; for `merge`: merged back (optional).' },
+        tags: { type: 'array', items: { type: 'string' }, description: 'For `update` / `merge`: replacement tags.' },
       },
       required: ['action'],
       additionalProperties: false,
@@ -2128,7 +2131,7 @@ export function apply(ctx, config) {
     return ctx.tools.register({
       name: 'study',
       description:
-        'Manage the learner\'s spaced-repetition deck. Use `add` to turn an explanation into atomic flashcards, `due` to fetch the review queue and quiz the user one question at a time, `grade` to record the result (again/hard/good/easy), `stats` for progress, `list` to browse, `update`/`delete` to edit. Always prefer creating cards after teaching a topic, and never invent progress numbers.',
+        'Manage the learner\'s spaced-repetition deck. Use `add` to turn an explanation into a SMALL number of focused flashcards: one card per coherent concept or tightly related Q&A cluster, never one card per sentence. If a new point extends an existing card in the same deck, use `merge` (or `update`) instead of adding a near-duplicate. Use `due` to fetch the review queue and quiz the user one question at a time, `grade` to record the result (again/hard/good/easy), `stats` for progress, `list` to browse, `update`/`delete` to edit. Always prefer creating cards after teaching a topic, and never invent progress numbers.',
       parameters,
       output: {
         schema: {
@@ -2267,6 +2270,44 @@ export function apply(ctx, config) {
             }
             await persist({ ...snapshot, cards: snapshot.cards.map((item) => (item.id === cardId ? updated : item)) })
             return { ok: true, summary: `已更新卡片 [${cardId}]：${updated.front}`, cardIds: [cardId] }
+          }
+
+          if (action === 'merge') {
+            const ids = new Set(
+              (Array.isArray(input.cardIds) ? input.cardIds : input.cardId ? [input.cardId] : [])
+                .map((id) => String(id))
+                .filter(Boolean),
+            )
+            if (ids.size < 2) throw new Error('study merge 需要至少两张卡片（cardIds）。')
+            const snapshot = syncFromConfig()
+            const selected = snapshot.cards.filter((card) => ids.has(card.id))
+            if (selected.length < 2) throw new Error('没有找到足够的卡片可合并。')
+            const first = selected[0]
+            const autoFront = selected.map((card) => card.front).join('；')
+            const autoBack = selected.map((card) => `• ${card.front}\n${card.back}`).join('\n\n')
+            const explicitFront = input.front === undefined ? '' : clampText(input.front, MAX_FRONT)
+            const explicitBack = input.back === undefined ? '' : clampText(input.back, MAX_BACK)
+            const tags = input.tags === undefined
+              ? [...new Set(selected.flatMap((card) => card.tags || []))].slice(0, 8)
+              : Array.isArray(input.tags)
+                ? input.tags.map((tag) => clampText(tag, 40)).filter(Boolean).slice(0, 8)
+                : first.tags
+            const merged = {
+              ...first,
+              front: explicitFront || clampText(autoFront, MAX_FRONT),
+              back: explicitBack || clampText(autoBack, MAX_BACK),
+              deck: input.deck === undefined ? first.deck : clampText(input.deck, 60) || first.deck,
+              tags,
+            }
+            const nextCards = snapshot.cards
+              .map((card) => (card.id === first.id ? merged : card))
+              .filter((card) => card.id === first.id || !ids.has(card.id))
+            await persist({ ...snapshot, cards: nextCards })
+            return {
+              ok: true,
+              summary: `已把 ${selected.length} 张相关卡片合并为一张 [${first.id}]：${merged.front}`,
+              cardIds: [first.id],
+            }
           }
 
           if (action === 'reset_stats') {
@@ -2520,6 +2561,7 @@ export function apply(ctx, config) {
                   progress: 0,
                   totalSlides: 0,
                   readSlides: 0,
+                  maxSlides: Number(input.maxSlides) || 0,
                   title: '',
                   courseName: '',
                   model: null,
@@ -2553,6 +2595,7 @@ export function apply(ctx, config) {
                   webServer: !!ws && typeof ws.register === 'function',
                   routesRegistered: registeredRouteCount,
                   llm: !!llm,
+                  attachments: !!ctx.get('attachments'),
                   modelProviders: catalog ? catalog.providers.map((provider) => ({ id: provider.id, models: provider.models.length })) : [],
                   modelError: catalogError || (catalog && catalog.error) || '',
                   selected,

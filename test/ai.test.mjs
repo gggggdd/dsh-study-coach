@@ -37,9 +37,9 @@ assert.match(annotation, /圈画\/画笔/)
 assert.match(annotation, /纵向 40%–70%/)
 
 const cards = ai.summaryToCards(parsed, { deck: '雨课堂 · 极限', lessonTitle: '极限与连续' })
-assert.ok(cards.length >= 2, 'knowledge points become cards')
+assert.ok(cards.length >= 1, 'knowledge points become cards')
+assert.match(cards[0].front, /ε-δ|连续/, 'related knowledge points are grouped into one card')
 assert.equal(cards[0].deck, '雨课堂 · 极限')
-assert.match(cards[0].front, /请解释：/)
 
 const pageText = ai.buildPageChatText({
   courseName: '高等数学',

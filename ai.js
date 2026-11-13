@@ -504,15 +504,29 @@ export function summaryToCards(summary, meta = {}) {
     seen.add(cleanFront)
     cards.push({ front: cleanFront, back: cleanBack, deck: deck, tags: tags.slice(0, 4) })
   }
-  for (const point of list(summary.knowledgePoints)) {
-    const page = point.page ? `（课件第 ${point.page} 页）` : ''
-    push(`请解释：${point.name}`, `${point.detail || point.name}${page}`)
-    if (cards.length >= 20) break
+  const chunk = (items, size) => {
+    const groups = []
+    for (let index = 0; index < items.length; index += size) groups.push(items.slice(index, index + size))
+    return groups
   }
-  if (cards.length < 20) {
-    for (const point of list(summary.examPoints)) {
-      push(`考点：${point.name}`, [point.why, point.how].filter(Boolean).join('\n'))
-      if (cards.length >= 20) break
+  const knowledge = list(summary.knowledgePoints).filter((point) => point && point.name)
+  for (const group of chunk(knowledge, 3)) {
+    const names = group.map((point) => point.name)
+    const front = group.length === 1 ? `请解释：${names[0]}` : `请说明以下相关知识点：${names.join('、')}`
+    const back = group.map((point) => {
+      const page = point.page ? `（课件第 ${point.page} 页）` : ''
+      return `• ${point.name}：${point.detail || point.name}${page}`
+    }).join('\n')
+    push(front, back)
+    if (cards.length >= 12) break
+  }
+  if (cards.length < 12) {
+    for (const group of chunk(list(summary.examPoints).filter((point) => point && point.name), 2)) {
+      const names = group.map((point) => point.name)
+      const front = group.length === 1 ? `考点：${names[0]}` : `相关考点：${names.join('、')}`
+      const back = group.map((point) => `• ${point.name}：${[point.why, point.how].filter(Boolean).join(' ')}`).join('\n')
+      push(front, back)
+      if (cards.length >= 12) break
     }
   }
   return cards

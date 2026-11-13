@@ -120,6 +120,18 @@ assert.match(addCommand.text, /已添加卡片/)
 const contextText = registrations.contexts[0].text()
 assert.match(contextText, /Learning deck: 5 cards/)
 
+// Related cards can be consolidated without losing scheduling metadata.
+const merged = await run({
+  action: 'merge',
+  cardIds: ['seed-spaced', 'seed-recall'],
+  front: '间隔重复与主动回忆有什么关系？',
+  back: '间隔重复安排复习时机；主动回忆负责把记忆提取出来，两者结合比反复阅读更有效。',
+})
+assert.match(merged.summary, /合并为一张/)
+assert.equal(merged.cardIds[0], 'seed-spaced')
+const mergedStats = await run({ action: 'stats' })
+assert.match(mergedStats.summary, /卡片总数：4/)
+
 // Persistence is written through the volatile Config field.
 assert.ok(updates.length >= 4, 'state was persisted through settings.update')
 assert.ok(updates.every((entry) => entry.ns === 'study-coach'))
